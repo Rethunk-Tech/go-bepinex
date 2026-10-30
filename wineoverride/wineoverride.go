@@ -39,8 +39,9 @@ func Ensure(userReg, dll, backup string) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = f.Close() }()
 	raw, err := safefs.ReadCapped(f, maxRegBytes)
+	// Closed before the replace below: Windows refuses to rename over a file that is still open.
+	_ = f.Close()
 	if err != nil {
 		return err
 	}
