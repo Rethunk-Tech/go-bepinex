@@ -11,8 +11,8 @@
 
 Installs BepInEx 5 into a Unity game: the pack, the Doorstop files, launch arguments and the Proton DLL override. Package `bepinex`, module `github.com/Rethunk-Tech/go-bepinex`.
 
-<!-- scaffold: one short paragraph on what the package guarantees and why it exists, in plain
-words. -->
+A pack zip is untrusted: it is extracted under go-archive's caps and a name that climbs out fails the install before
+the profile changes. `user.reg` edits are byte-exact apart from the one override line.
 
 ## Quick start
 
@@ -24,7 +24,11 @@ A worked example and the contracts: [HUMANS.md](HUMANS.md).
 
 ## Features
 
-<!-- scaffold: 3 to 6 bullets, each a capability a caller can rely on. No roadmap. -->
+- `InstallPack` lays a BepInEx 5 or 6 pack into a folder, replacing the old pack but keeping mods and player config.
+- `LaunchArgs` and `VanillaArgs` give the Doorstop 3 and 4 flags, with Wine `Z:` paths on request.
+- `WriteAbsoluteConfig` makes a `doorstop_config.ini` that works from the game folder.
+- `PlaceUnityLibs` keeps and places the Unity base libraries an IL2CPP game needs.
+- `wineoverride.Ensure` sets a `native,builtin` DLL override in a Proton prefix's `user.reg`.
 
 ## Documentation
 

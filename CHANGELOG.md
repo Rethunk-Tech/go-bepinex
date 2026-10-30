@@ -6,6 +6,8 @@ Notable changes to `go-bepinex`. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-30
+
 ### Added
 
 - `bepinex.InstallPack` installs a BepInEx 5 or 6 pack zip into a profile folder, replacing the previous pack and
@@ -17,4 +19,5 @@ Notable changes to `go-bepinex`. The format follows
 - `wineoverride.Ensure` sets a native DLL override in a Proton prefix's `user.reg` byte-exactly; `ZPath` maps host paths
   to Wine's `Z:` form.
 
-[Unreleased]: https://github.com/Rethunk-Tech/go-bepinex/commits/main
+[Unreleased]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Rethunk-Tech/go-bepinex/releases/tag/v0.1.0
