@@ -318,3 +318,23 @@ func TestAPackWhoseProxyIsVersionDllLoadsThatOne(t *testing.T) {
 		t.Fatalf("placed %q after the swap", got)
 	}
 }
+
+func TestInstallPackRefusesWhatIsNotAPack(t *testing.T) {
+	dir := t.TempDir()
+	notZip := filepath.Join(dir, "x.zip")
+	writeAt(t, notZip, []byte("not a zip"))
+	for name, zipPath := range map[string]string{
+		"missing":      filepath.Join(dir, "none.zip"),
+		"not a zip":    notZip,
+		"no pack root": writeZip(t, map[string]string{"readme.txt": "hi"}),
+	} {
+		profile := filepath.Join(t.TempDir(), "profile")
+		if _, err := InstallPack(zipPath, profile); err == nil {
+			t.Errorf("%s: installed", name)
+		}
+	}
+	// The profile's parent is a file, so even its folder cannot be made.
+	if _, err := InstallPack(notZip, filepath.Join(notZip, "profile")); err == nil {
+		t.Error("a profile under a file was made")
+	}
+}

@@ -61,3 +61,15 @@ func TestPlaceUnityLibsRefusesWhatIsNotAZip(t *testing.T) {
 		t.Fatal("a non-zip reached the cache")
 	}
 }
+
+func TestPublicWrappers(t *testing.T) {
+	// A game with no readable Unity version returns before any download.
+	if err := PlaceUnityLibs(t.Context(), t.TempDir(), t.TempDir(), t.TempDir()); err != nil {
+		t.Fatal(err)
+	}
+	p := Proxies()
+	p[0] = "changed"
+	if Proxies()[0] != "winhttp.dll" {
+		t.Error("Proxies hands out its own slice")
+	}
+}
