@@ -53,6 +53,13 @@ func main() {
 | `Entry`, `HasCLR`, `HostPath` | The entry assembly (relative), whether a .NET runtime is shipped, and a profile path as absolute or `Z:`. |
 | `UnityVersion(game)` | The `2022.3.21`-style version from `*_Data/globalgamemanagers`, or "". |
 | `PlaceUnityLibs(ctx, game, profile, cache)` | No-op without a version; downloads once into `cache/unity-libs`; a failure is safe to ignore, BepInEx fetches them itself. |
+| `plugins.ScanDir(dir)` / `ScanEach` / `PluginsIn` | What every DLL under the absolute `dir` declares (go-dotnet types); `ScanEach` gives one `Declared` per DLL. An unreadable DLL declares nothing. |
+| `plugins.DLLs(dir)` | Regular `.dll` files under an absolute `dir`; symlinks are never followed, a relative `dir` gives nil. |
+| `plugins.PluginFile(dir, "name version")` | The DLL declaring that plugin, or "". |
+| `plugins.Owners(dirs)` | Lower-cased GUID, name, "name version" and a root namespace used by exactly one folder, to that folder's index. |
+| `plugins.LoadOrder(assemblies)` / `Loadable(p)` | BepInEx 5.4.23's order: newest copy per GUID, versions read as `System.Version` (an unreadable one never loads), GUIDs sorted caselessly, dependencies first; `Cycle` marks plugins in a dependency cycle. |
+| `logline.Parse(line)` | A `[Level  :  Source] message` header, optionally behind a `[stamp] `; false for continuation lines. |
+| `logline.SplitStamp(line)` / `Format(l)` | The stamp and the rest of a line; a `Line` written back as BepInEx pads it. |
 | `wineoverride.Ensure(userReg, dll, backup)` | Idempotent; refuses a `dll` that is empty or has `"`, `\`, `=` or control characters (`ErrBadName`); copies the original to `backup` once when it is not empty. |
 | `wineoverride.ZPath(p)` | `Z:\...` form of a host path; meaningful on a Unix host only. |
 

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Package `bepinex` installs a BepInEx pack zip into a profile folder and describes how Doorstop starts it (files,
+Package `plugins` reads which BepInEx plugins a folder's DLLs declare and the order the chainloader loads them in; package `logline` reads and writes `LogOutput.log` header lines. Package `bepinex` installs a BepInEx pack zip into a profile folder and describes how Doorstop starts it (files,
 launch flags, Unity base libraries); package `wineoverride` edits a Wine prefix's `user.reg` and maps host paths to
 Wine's `Z:` form. A mod manager or launcher imports them; they import no consumer package and know no game catalogue,
 profile model or Thunderstore manifest schema (the pack's `manifest.json` is returned as raw bytes).
@@ -28,6 +28,12 @@ since the `Z:` drive maps a Unix root.
 - `wineoverride.edit` splits and rejoins on the file's own line ending, so every untouched byte survives. A trailing
   bare CR counts as CRLF, or the appended section would flip the ending on the next run. A DLL name that could
   carry a quote, backslash, `=` or control character is refused so it cannot write another registry line.
+- `plugins` returns go-dotnet's own types and does no assembly parsing: go-dotnet reads and fuzzes the bytes. `DLLs` walks
+  through `os.OpenRoot` and keeps regular files only, so a link out of the folder is never read. `LoadOrder` follows
+  BepInEx 5.4.23's chainloader; its one known difference (ordinal against invariant-culture GUID sort) is marked in the code.
+- `logline` is BepInEx's line format only. Any tag a consumer's own bridge plugin embeds in the message stays in the
+  message for the consumer to split. A bare header whose message opens with `[` is ambiguous with a stamped line once
+  formatted; `FuzzParse` skips that one case.
 - Size bounds are policy: `user.reg` 128 MiB, `doorstop_config.ini` and the pack manifest 1 MiB, downloaded Unity
   libraries 256 MiB.
 - Network is confined to `PlaceUnityLibs`, which fetches one fixed host with a version string matched by regexp
@@ -42,4 +48,7 @@ since the `Z:` drive maps a Unix root.
 | `doorstop.go` | `Proxy`, `DoorstopFiles`, `WriteAbsoluteConfig` and the config rewrite |
 | `launch.go` | `Entry`, `HasCLR`, `HostPath`, `LaunchArgs`, `VanillaArgs` |
 | `unitylibs.go` | `UnityVersion`, `PlaceUnityLibs` |
+| `plugins/dir.go` | `ScanDir`, `ScanEach`, `PluginsIn`, `DLLs`, `PluginFile`, `Owners` |
+| `plugins/order.go` | `LoadOrder`, `Loadable`, `Loaded` |
+| `logline/logline.go` | `Line`, `Level`, `Parse`, `SplitStamp`, `Format` |
 | `wineoverride/wineoverride.go` | `Ensure` (DllOverrides edit), `ZPath` |

@@ -18,6 +18,10 @@ Notable changes to `go-bepinex`. The format follows
 - `bepinex.PlaceUnityLibs` and `UnityVersion` keep and place the Unity base libraries an IL2CPP game needs.
 - `wineoverride.Ensure` sets a native DLL override in a Proton prefix's `user.reg` byte-exactly; `ZPath` maps host paths
   to Wine's `Z:` form.
+- `plugins.ScanDir`, `ScanEach`, `PluginsIn`, `DLLs`, `PluginFile` and `Owners` read which BepInEx plugins the DLLs in a
+  folder declare through go-dotnet, without following links out of the folder.
+- `plugins.LoadOrder` and `Loadable` give the order BepInEx 5's chainloader loads plugins in.
+- `logline.Parse`, `SplitStamp` and `Format` read and write BepInEx `LogOutput.log` header lines, fuzzed.
 
 [Unreleased]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/Rethunk-Tech/go-bepinex/releases/tag/v0.1.0

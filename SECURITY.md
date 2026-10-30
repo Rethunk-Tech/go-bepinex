@@ -21,6 +21,9 @@ Please do not open a public issue for a suspected vulnerability first.
   never turned into an absolute path or probed for existence.
 - **`user.reg`** (`wineoverride.Ensure`): read up to 128 MiB; the edit touches only the override line (or appends one
   section), keeps the line ending and every other byte, and the DLL name cannot inject another line.
+- **Plugin DLLs** (`plugins.ScanDir` and the rest): untrusted bytes, parsed by go-dotnet (fuzzed there) and never loaded or
+  run. `DLLs` stays inside the folder and skips symlinks.
+- **`LogOutput.log` lines** (`logline.Parse`): text a mod wrote; matched with linear-time regexps and fuzzed.
 - **The Unity libraries download** (`PlaceUnityLibs`): fixed host, version from digits and dots, capped at 256 MiB,
   kept only with a zip signature. The game's `globalgamemanagers` is read for its first 64 KiB only.
 
