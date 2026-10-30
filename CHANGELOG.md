@@ -6,4 +6,9 @@ Notable changes to `go-bepinex`. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `wineoverride.Ensure` sets a native DLL override in a Proton prefix's `user.reg` byte-exactly; `ZPath` maps host paths
+  to Wine's `Z:` form.
+
 [Unreleased]: https://github.com/Rethunk-Tech/go-bepinex/commits/main
