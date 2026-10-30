@@ -1,6 +1,7 @@
 package wineoverride
 
 import (
+	"errors"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -63,7 +64,7 @@ func TestEnsureRefusesANameThatWouldEditAnotherLine(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, bad := range []string{"", "a\"b", "a\nb", `a\b`, "a=b"} {
-		if err := Ensure(reg, bad, ""); err != ErrBadName {
+		if err := Ensure(reg, bad, ""); !errors.Is(err, ErrBadName) {
 			t.Errorf("Ensure(%q) = %v", bad, err)
 		}
 	}

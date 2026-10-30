@@ -30,7 +30,7 @@ func FuzzEdit(f *testing.F) {
 		}
 		eol := lineEnding(text)
 		have := strings.Split(once, eol)
-		for _, l := range strings.Split(text, eol) {
+		for l := range strings.SplitSeq(text, eol) {
 			if l == "" || strings.HasPrefix(strings.ToLower(l), `"winhttp"=`) {
 				continue
 			}
