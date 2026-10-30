@@ -8,6 +8,12 @@ Notable changes to `go-bepinex`. The format follows
 
 ### Added
 
+- `bepinex.InstallPack` installs a BepInEx 5 or 6 pack zip into a profile folder, replacing the previous pack and
+  keeping mods and player config, with go-archive's extraction caps.
+- `bepinex.LaunchArgs`, `VanillaArgs`, `DoorstopFiles`, `Proxy`, `Entry`, `HasCLR` and `HostPath` describe how Doorstop 3
+  and 4 start the pack, including an IL2CPP pack's .NET runtime and Wine `Z:` paths.
+- `bepinex.WriteAbsoluteConfig` writes a `doorstop_config.ini` whose paths work from the game folder.
+- `bepinex.PlaceUnityLibs` and `UnityVersion` keep and place the Unity base libraries an IL2CPP game needs.
 - `wineoverride.Ensure` sets a native DLL override in a Proton prefix's `user.reg` byte-exactly; `ZPath` maps host paths
   to Wine's `Z:` form.
 
