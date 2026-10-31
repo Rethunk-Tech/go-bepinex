@@ -12,7 +12,7 @@ tool (
 
 require (
 	github.com/Rethunk-Tech/go-archive v0.2.0
-	github.com/Rethunk-Tech/go-dotnet v0.1.0
+	github.com/Rethunk-Tech/go-dotnet v0.1.1
 	github.com/Rethunk-Tech/go-httpkit v0.1.0
 	github.com/Rethunk-Tech/go-safefs v0.2.0
 	github.com/Rethunk-Tech/go-semverish v0.2.0
