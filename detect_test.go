@@ -73,7 +73,8 @@ func TestPlacementForDarwin(t *testing.T) {
 		t.Errorf("Files = %v, Executable = %v", got.Files, got.Executable)
 	}
 	abs, _ := filepath.Abs(filepath.Join(p, "run_bepinex.sh"))
-	if want := `"` + abs + `" %command%`; got.LaunchOption != want {
+	// LaunchOption escapes backslashes for the shell, which only shows when the test runs on Windows.
+	if want := `"` + strings.ReplaceAll(abs, `\`, `\\`) + `" %command%`; got.LaunchOption != want {
 		t.Errorf("LaunchOption = %q, want %q", got.LaunchOption, want)
 	}
 	if slices.Contains(got.Files, "winhttp.dll") {
