@@ -1,6 +1,7 @@
 package wineoverride
 
 import (
+	"slices"
 	"strings"
 	"testing"
 )
@@ -34,20 +35,11 @@ func FuzzEdit(f *testing.F) {
 			if l == "" || strings.HasPrefix(strings.ToLower(l), `"winhttp"=`) {
 				continue
 			}
-			i := indexOf(have, l)
+			i := slices.Index(have, l)
 			if i < 0 {
 				t.Fatalf("line lost: %q", l)
 			}
 			have = have[i+1:]
 		}
 	})
-}
-
-func indexOf(lines []string, l string) int {
-	for i, x := range lines {
-		if x == l {
-			return i
-		}
-	}
-	return -1
 }
