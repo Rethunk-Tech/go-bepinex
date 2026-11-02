@@ -48,6 +48,10 @@ func main() {
 | `DoorstopFiles(profile, fallback)` | Slash-separated names of `doorstop_config.ini` and the proxy that exist; `fallback` names the proxy before a pack is installed. |
 | `Proxy(profile, fallback)` / `Proxies()` | The installed proxy (`winhttp.dll`, `version.dll`, `winmm.dll`) or `fallback`. |
 | `LaunchArgs(profile, major, proton)` | Doorstop 3 (`major < 4`) or 4 flags; adds the CLR flags when the pack ships `dotnet/coreclr.dll`. |
+| `Detect(profile)` | `FlavorBepInEx5`, `FlavorBepInEx6Mono`, `FlavorBepInEx6IL2CPP` or `FlavorNone`, from the entry assembly alone. |
+| `IsIL2CPPGame(dir)` | True when `GameAssembly.dll`, `.so` or a `.app`'s `Contents/Frameworks/GameAssembly.dylib` and an `il2cpp_data` folder both exist. |
+| `PlacementFor(profile, goos)` | `windows`/`linux`: `DoorstopFiles`. `darwin`: `run_bepinex.sh` and `libdoorstop*.dylib` (no proxy), the same as `Executable` for the caller to chmod 0o755, and the Steam `LaunchOption` (empty when the pack has no script). Nothing is written. |
+| `LaunchOption(script)` | `"<script>" %command%`, with `\`, `"`, `$` and backtick escaped. |
 | `VanillaArgs()` | Switches Doorstop off in either spelling. |
 | `WriteAbsoluteConfig(profile, dst, major, proton)` | Writes `dst` from the profile's config; errors if the config is missing or over 1 MiB; paths leaving the profile stay as written. |
 | `Entry`, `HasCLR`, `HostPath` | The entry assembly (relative), whether a .NET runtime is shipped, and a profile path as absolute or `Z:`. |

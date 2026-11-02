@@ -122,7 +122,7 @@ func extract(zipPath, dest string) error {
 // keeps none of its files: a newer pack's .doorstop_version left behind would make a caller pass Doorstop 4 flags to
 // an older Doorstop 3 proxy, which then never starts BepInEx. A mod's own core files sit in folders below core and stay.
 func clearPack(profileRoot string) error {
-	for _, name := range append(append([]string{doorstopFile, doorstopConfig, "doorstop_libs"}, proxies...), packRuntimeDirs...) {
+	for _, name := range append(append([]string{doorstopFile, doorstopConfig, "doorstop_libs", macScript, "libdoorstop.dylib"}, proxies...), packRuntimeDirs...) {
 		if err := safefs.RemoveAll(filepath.Join(profileRoot, name)); err != nil {
 			return err
 		}

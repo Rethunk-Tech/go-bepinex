@@ -45,6 +45,8 @@ since the `Z:` drive maps a Unix root.
 | --- | --- |
 | `doc.go` | Package comment |
 | `install.go` | `InstallPack`, `Proxies`, pack clearing and entry-assembly detection |
+| `detect.go` | `Flavor`, `Detect`, `IsIL2CPPGame` |
+| `darwin.go` | `Placement`, `PlacementFor`, `LaunchOption` (macOS start through `run_bepinex.sh`) |
 | `doorstop.go` | `Proxy`, `DoorstopFiles`, `WriteAbsoluteConfig` and the config rewrite |
 | `launch.go` | `Entry`, `HasCLR`, `HostPath`, `LaunchArgs`, `VanillaArgs` |
 | `unitylibs.go` | `UnityVersion`, `PlaceUnityLibs` |
