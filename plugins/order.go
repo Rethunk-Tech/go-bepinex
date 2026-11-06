@@ -33,27 +33,7 @@ func Loadable(p dotnet.Plugin) bool {
 // ponytail: GUIDs sort by lower-cased ordinal where BepInEx uses StringComparer.InvariantCultureIgnoreCase; they differ
 // only on punctuation such as '-' against letters, which no GUID in a 77-plugin real run hit.
 func LoadOrder(assemblies []dotnet.Declared) []Loaded {
-	newest := map[string]Loaded{}
-	for _, d := range assemblies {
-		for _, p := range d.Plugins {
-			if !Loadable(p) {
-				continue
-			}
-			key := strings.ToLower(p.GUID)
-			if have, ok := newest[key]; ok {
-				if c, ok := semverish.CompareDotNet(p.Version, have.Version); !ok || c <= 0 {
-					continue
-				}
-			}
-			l := Loaded{Plugin: p}
-			for _, r := range d.Relations {
-				if r.Plugin == p.GUID && r.Kind != dotnet.Incompatible {
-					l.Deps = append(l.Deps, r)
-				}
-			}
-			newest[key] = l
-		}
-	}
+	newest := newestPlugins(assemblies)
 	keys := slices.Sorted(maps.Keys(newest))
 	var order []string
 	cycle := map[string]bool{}
@@ -89,4 +69,30 @@ func LoadOrder(assemblies []dotnet.Declared) []Loaded {
 		out[i].Cycle = cycle[k]
 	}
 	return out
+}
+
+// newestPlugins keeps, per lower-cased GUID, the loadable plugin with the newest version, with its declared relations.
+func newestPlugins(assemblies []dotnet.Declared) map[string]Loaded {
+	newest := map[string]Loaded{}
+	for _, d := range assemblies {
+		for _, p := range d.Plugins {
+			if !Loadable(p) {
+				continue
+			}
+			key := strings.ToLower(p.GUID)
+			if have, ok := newest[key]; ok {
+				if c, ok := semverish.CompareDotNet(p.Version, have.Version); !ok || c <= 0 {
+					continue
+				}
+			}
+			l := Loaded{Plugin: p}
+			for _, r := range d.Relations {
+				if r.Plugin == p.GUID && r.Kind != dotnet.Incompatible {
+					l.Deps = append(l.Deps, r)
+				}
+			}
+			newest[key] = l
+		}
+	}
+	return newest
 }
