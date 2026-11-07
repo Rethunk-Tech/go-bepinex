@@ -125,3 +125,28 @@ func TestScanDoesNotReadADLLSwappedForALink(t *testing.T) {
 		t.Fatalf("read through the link: %v", got)
 	}
 }
+
+// A folder swapped for a link after the walk is not followed out of the plugins root.
+func TestCopyOutRefusesAFolderSwappedForALink(t *testing.T) {
+	outside := t.TempDir()
+	write(t, outside, "Real.dll", fixture(t))
+	dir := t.TempDir()
+	write(t, dir, "sub/Mod.dll", []byte("x"))
+	root, err := os.OpenRoot(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = root.Close() }()
+	if got := dllsIn(root); !slices.Equal(got, []string{"sub/Mod.dll"}) {
+		t.Fatalf("dllsIn = %v", got)
+	}
+	if err := os.RemoveAll(filepath.Join(dir, "sub")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(dir, "sub")); err != nil {
+		t.Fatal(err)
+	}
+	if err := copyOut(root, "sub/Real.dll", filepath.Join(t.TempDir(), "x.dll")); err == nil {
+		t.Fatal("read through a folder link that leaves the root")
+	}
+}
