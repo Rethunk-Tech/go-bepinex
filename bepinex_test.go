@@ -123,6 +123,23 @@ func TestInstallPackRefusesWhatClimbsOut(t *testing.T) {
 	}
 }
 
+func TestAPackKeepsANestedConfigFile(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "profile")
+	writeAt(t, filepath.Join(root, "BepInEx", "config", "Mod", "settings.cfg"), []byte("mine"))
+	zipPath := writeZip(t, map[string]string{
+		"manifest.json":                                  `{"name":"BepInExPack","version_number":"5.4.2305"}`,
+		"BepInExPack/winhttp.dll":                        "proxy",
+		"BepInExPack/BepInEx/core/BepInEx.Preloader.dll": "x",
+		"BepInExPack/BepInEx/config/Mod/settings.cfg":    "pack's",
+	})
+	if _, err := InstallPack(zipPath, root); err != nil {
+		t.Fatal(err)
+	}
+	if b, _ := safefs.ReadFile(filepath.Join(root, "BepInEx", "config", "Mod", "settings.cfg")); string(b) != "mine" {
+		t.Fatalf("nested config replaced: %q", b)
+	}
+}
+
 func TestAnOlderPackOverANewerOneKeepsNoneOfItsFiles(t *testing.T) {
 	root := filepath.Join(t.TempDir(), "profile")
 	if _, err := InstallPack(buildPack(t, "4.3.0.0\n"), root); err != nil {

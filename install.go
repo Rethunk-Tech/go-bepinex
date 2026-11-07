@@ -87,7 +87,7 @@ func InstallPack(zipPath, profileRoot string) (Installed, error) {
 			return os.MkdirAll(dst, 0o750)
 		}
 		// A config file the profile already has holds the player's settings; BepInEx adds any new keys itself.
-		if filepath.Dir(rel) == filepath.Join("BepInEx", "config") {
+		if strings.HasPrefix(rel, filepath.Join("BepInEx", "config")+string(filepath.Separator)) {
 			if _, err := os.Stat(dst); err == nil {
 				return nil
 			}
