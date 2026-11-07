@@ -104,3 +104,24 @@ func TestOwnersNamespaceNeedsOneFolder(t *testing.T) {
 		t.Errorf("namespace %q owner = %d, %v; want 0", root, i, ok)
 	}
 }
+
+// A DLL swapped for a link after the walk lists it is still not read through the link.
+func TestScanDoesNotReadADLLSwappedForALink(t *testing.T) {
+	outside := t.TempDir()
+	write(t, outside, "Real.dll", fixture(t))
+	dir := t.TempDir()
+	path := filepath.Join(dir, "Mod.dll")
+	write(t, dir, "Mod.dll", []byte("x"))
+	if got := DLLs(dir); !slices.Equal(got, []string{path}) {
+		t.Fatalf("DLLs = %v", got)
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(outside, "Real.dll"), path); err != nil {
+		t.Fatal(err)
+	}
+	if got := PluginsIn(dir); len(got) != 0 {
+		t.Fatalf("read through the link: %v", got)
+	}
+}
