@@ -6,6 +6,14 @@ Notable changes to `go-bepinex`. The format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-07
+
+### Fixed
+
+- Plugin DLLs are read through one root on the plugins folder, so a DLL swapped for a link is not read.
+- `InstallPack` keeps nested files under `BepInEx/config` on a pack reinstall.
+- The Unity libraries download refuses a redirect to another origin and re-checks the zip.
+
 ## [0.2.0] - 2026-11-02
 
 ### Added
@@ -33,6 +41,7 @@ Notable changes to `go-bepinex`. The format follows
 - `plugins.LoadOrder` and `Loadable` give the order BepInEx 5's chainloader loads plugins in.
 - `logline.Parse`, `SplitStamp` and `Format` read and write BepInEx `LogOutput.log` header lines, fuzzed.
 
-[Unreleased]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Rethunk-Tech/go-bepinex/releases/tag/v0.1.0
