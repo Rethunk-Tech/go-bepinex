@@ -6,6 +6,12 @@ Notable changes to `go-bepinex`. The format follows
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-11-07
+
+### Fixed
+
+- The same code as 0.2.1, released again: 0.2.1's tag moved after the Go module proxy had cached it, so `go get` from the proxy and from GitHub disagreed on its checksum. Use 0.2.2.
+
 ## [0.2.1] - 2026-11-07
 
 ### Fixed
@@ -41,7 +47,8 @@ Notable changes to `go-bepinex`. The format follows
 - `plugins.LoadOrder` and `Loadable` give the order BepInEx 5's chainloader loads plugins in.
 - `logline.Parse`, `SplitStamp` and `Format` read and write BepInEx `LogOutput.log` header lines, fuzzed.
 
-[Unreleased]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Rethunk-Tech/go-bepinex/releases/tag/v0.1.0
