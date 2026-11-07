@@ -37,7 +37,8 @@ since the `Z:` drive maps a Unix root.
 - Size bounds are policy: `user.reg` 128 MiB, `doorstop_config.ini` and the pack manifest 1 MiB, downloaded Unity
   libraries 256 MiB.
 - Network is confined to `PlaceUnityLibs`, which fetches one fixed host with a version string matched by regexp
-  (digits and dots) and checks the `PK` magic before keeping the file.
+  (digits and dots), refuses a redirect to another origin, and keeps the file only if it is a zip whose entries stay
+  local; the cached copy is re-checked on every placement. The source publishes no digests, so none is pinned.
 
 ## Files
 

@@ -1,8 +1,10 @@
 package bepinex
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,6 +23,8 @@ const (
 	// unityHeaderBytes is how far into globalgamemanagers the version is looked for; it sits in the file's header.
 	unityHeaderBytes = 1 << 16
 	maxUnityLibs     = 256 << 20
+	// maxUnityLibsUnpacked bounds what BepInEx would extract from the zip.
+	maxUnityLibsUnpacked = 1 << 30
 )
 
 // unityVersionPattern is the engine version Unity writes near the start of globalgamemanagers, as 2022.3.21f1.
@@ -66,6 +70,10 @@ func placeUnityLibs(ctx context.Context, baseURL, gameDir, profileDir, cacheDir 
 	if err != nil {
 		return err
 	}
+	if err := checkUnityZip(b); err != nil {
+		_ = safefs.RemoveAll(kept)
+		return fmt.Errorf("unity libraries %s: %w", ver, err)
+	}
 	return writeIn(filepath.Join(profileDir, "BepInEx", "unity-libs", ver+".zip"), b)
 }
 
@@ -83,12 +91,35 @@ func downloadUnityLibs(ctx context.Context, baseURL, ver, dst string) error {
 	if err != nil {
 		return err
 	}
-	b, err := httpkit.DoCapped(nil, req, maxUnityLibs, nil)
+	// BepInEx loads this zip as code and the source publishes no digests, so the download never leaves the first origin.
+	b, err := httpkit.DoCapped(httpkit.WithRedirect(nil, httpkit.SameOrigin), req, maxUnityLibs, nil)
 	if err != nil {
 		return fmt.Errorf("unity libraries %s: %w", ver, err)
 	}
-	if !bytes.HasPrefix(b, []byte("PK")) {
-		return fmt.Errorf("unity libraries %s: not a zip", ver)
+	if err := checkUnityZip(b); err != nil {
+		return fmt.Errorf("unity libraries %s: %w", ver, err)
 	}
 	return writeIn(dst, b)
+}
+
+// checkUnityZip refuses bytes that are not a zip whose entries all stay inside the folder BepInEx unpacks them to.
+func checkUnityZip(b []byte) error {
+	if !bytes.HasPrefix(b, []byte("PK")) {
+		return errors.New("not a zip")
+	}
+	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
+	if err != nil {
+		return fmt.Errorf("not a zip: %w", err)
+	}
+	var total uint64
+	for _, f := range zr.File {
+		if !filepath.IsLocal(filepath.FromSlash(f.Name)) {
+			return fmt.Errorf("entry %q leaves the folder", f.Name)
+		}
+		total += f.UncompressedSize64
+	}
+	if total > maxUnityLibsUnpacked {
+		return errors.New("unpacks too large")
+	}
+	return nil
 }

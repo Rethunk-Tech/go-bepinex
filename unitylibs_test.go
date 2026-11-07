@@ -1,6 +1,8 @@
 package bepinex
 
 import (
+	"archive/zip"
+	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -28,7 +30,7 @@ func TestPlaceUnityLibs(t *testing.T) {
 			http.NotFound(w, r)
 			return
 		}
-		_, _ = w.Write([]byte("PK\x03\x04zip"))
+		_, _ = w.Write(unityZip(t, "UnityEngine.dll"))
 	}))
 	defer srv.Close()
 	cache := t.TempDir()
@@ -36,8 +38,8 @@ func TestPlaceUnityLibs(t *testing.T) {
 		if err := placeUnityLibs(t.Context(), srv.URL+"/", game, profile, cache); err != nil {
 			t.Fatal(err)
 		}
-		if b, err := safefs.ReadFile(filepath.Join(profile, "BepInEx", "unity-libs", "2022.3.21.zip")); err != nil || string(b) != "PK\x03\x04zip" {
-			t.Fatalf("placed = %q, %v", b, err)
+		if b, err := safefs.ReadFile(filepath.Join(profile, "BepInEx", "unity-libs", "2022.3.21.zip")); err != nil || !bytes.Equal(b, unityZip(t, "UnityEngine.dll")) {
+			t.Fatalf("placed = %d bytes, %v", len(b), err)
 		}
 	}
 	if asked.Load() != 1 {
@@ -71,5 +73,73 @@ func TestPublicWrappers(t *testing.T) {
 	p[0] = "changed"
 	if Proxies()[0] != "winhttp.dll" {
 		t.Error("Proxies hands out its own slice")
+	}
+}
+
+func unityZip(t *testing.T, names ...string) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	for _, n := range names {
+		w, err := zw.Create(n)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, _ = w.Write([]byte("x"))
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return buf.Bytes()
+}
+
+func unityGame(t *testing.T) string {
+	game := t.TempDir()
+	writeAt(t, filepath.Join(game, "G_Data", "globalgamemanagers"), []byte("2022.3.21f1"))
+	return game
+}
+
+// A redirect to another host would hand BepInEx a zip from anywhere, so the download refuses it.
+func TestPlaceUnityLibsRefusesACrossHostRedirect(t *testing.T) {
+	var elsewhereHit atomic.Bool
+	elsewhere := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		elsewhereHit.Store(true)
+		_, _ = w.Write(unityZip(t, "Evil.dll"))
+	}))
+	defer elsewhere.Close()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, elsewhere.URL+"/x.zip", http.StatusFound)
+	}))
+	defer srv.Close()
+	cache := t.TempDir()
+	if err := placeUnityLibs(t.Context(), srv.URL+"/", unityGame(t), t.TempDir(), cache); err == nil {
+		t.Fatal("a cross-host redirect was followed")
+	}
+	if elsewhereHit.Load() || safefs.IsFile(filepath.Join(cache, "unity-libs", "2022.3.21.zip")) {
+		t.Fatal("the redirect target was fetched or cached")
+	}
+}
+
+func TestPlaceUnityLibsRefusesAZipThatLeavesItsFolder(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(unityZip(t, "../../evil.dll"))
+	}))
+	defer srv.Close()
+	if err := placeUnityLibs(t.Context(), srv.URL+"/", unityGame(t), t.TempDir(), t.TempDir()); err == nil {
+		t.Fatal("an escaping entry was kept")
+	}
+}
+
+// A cached copy that no longer checks out is dropped, not copied into the profile.
+func TestPlaceUnityLibsRechecksTheCachedCopy(t *testing.T) {
+	cache := t.TempDir()
+	kept := filepath.Join(cache, "unity-libs", "2022.3.21.zip")
+	writeAt(t, kept, []byte("PKtampered"))
+	profile := t.TempDir()
+	if err := placeUnityLibs(t.Context(), "http://127.0.0.1:1/", unityGame(t), profile, cache); err == nil {
+		t.Fatal("a tampered cache was placed")
+	}
+	if safefs.IsFile(kept) || safefs.IsFile(filepath.Join(profile, "BepInEx", "unity-libs", "2022.3.21.zip")) {
+		t.Fatal("a tampered cache survived")
 	}
 }
