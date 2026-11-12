@@ -26,8 +26,8 @@ func FuzzEdit(f *testing.F) {
 		if !changed && out != text {
 			t.Fatalf("reported unchanged but bytes differ")
 		}
-		max := len(text) + len(dllOverridesHeader) + len(line) + 80
-		if len(out) > max {
+		bound := len(text) + len(dllOverridesHeader) + len(line) + 80
+		if len(out) > bound {
 			t.Fatalf("edit grew past bound: %d -> %d", len(text), len(out))
 		}
 		again, againChanged := edit(out, dll, now)
