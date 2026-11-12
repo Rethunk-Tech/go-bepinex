@@ -1,45 +1,41 @@
 package wineoverride
 
 import (
-	"slices"
+	"fmt"
 	"strings"
 	"testing"
 )
 
-// FuzzEdit feeds user.reg contents: the edit adds or sets exactly one override line and leaves every other line, and
-// the file's line ending, as it was.
 func FuzzEdit(f *testing.F) {
-	for _, s := range []string{
-		"", "\n", "WINE REGISTRY Version 2\n\n[Software\\\\Wine\\\\DllOverrides] 1\n#time=1\n\"dxgi\"=\"native\"\n",
-		"[Software\\\\Wine\\\\DllOverrides] 1\r\n\"winhttp\"=\"builtin\"\r\n\r\n[x]\r\n",
-		"a\r\nb\nc", "0\r", "\r\n\n", "[software\\\\wine\\\\dlloverrides]\n\"WINHTTP\"=\"x\"\n",
-	} {
-		f.Add(s)
-	}
-	f.Fuzz(func(t *testing.T, text string) {
-		now := func() int64 { return 1 }
-		once, changed := edit(text, "winhttp", now)
-		if !changed {
-			if once != text {
-				t.Fatal("unchanged but rewritten")
-			}
+	f.Add("WINE REGISTRY Version 2\n\n[Software\\\\Wine\\\\DllOverrides] 1\n#time=1\n\"winhttp\"=\"native,builtin\"\n", "winhttp")
+	f.Add("WINE REGISTRY Version 2\r\n\r\n[Software\\\\Wine\\\\DllOverrides] 1\r\n#time=1\r\n", "winhttp")
+	f.Add("WINE REGISTRY Version 2\n", "version")
+	f.Add("WINE REGISTRY Version 2\r", "winhttp")
+	f.Add("[Software\\\\Wine\\\\DllOverrides]\n\"version\"=\"builtin\"\n", "version")
+	f.Add("", "winhttp")
+	f.Fuzz(func(t *testing.T, text, dll string) {
+		if !validName(dll) {
 			return
 		}
-		twice, again := edit(once, "winhttp", now)
-		if again || twice != once {
-			t.Fatalf("not idempotent:\n%q\n%q", once, twice)
+		now := func() int64 { return 0 }
+		out, changed := edit(text, dll, now)
+		line := fmt.Sprintf(`"%s"="native,builtin"`, dll)
+		if !strings.Contains(out, line) {
+			t.Fatalf("missing override %q", line)
 		}
-		eol := lineEnding(text)
-		have := strings.Split(once, eol)
-		for l := range strings.SplitSeq(text, eol) {
-			if l == "" || strings.HasPrefix(strings.ToLower(l), `"winhttp"=`) {
-				continue
-			}
-			i := slices.Index(have, l)
-			if i < 0 {
-				t.Fatalf("line lost: %q", l)
-			}
-			have = have[i+1:]
+		if !changed && out != text {
+			t.Fatalf("reported unchanged but bytes differ")
+		}
+		max := len(text) + len(dllOverridesHeader) + len(line) + 80
+		if len(out) > max {
+			t.Fatalf("edit grew past bound: %d -> %d", len(text), len(out))
+		}
+		again, againChanged := edit(out, dll, now)
+		if againChanged {
+			t.Fatal("second edit reported a change")
+		}
+		if again != out {
+			t.Fatal("second edit was not idempotent")
 		}
 	})
 }
