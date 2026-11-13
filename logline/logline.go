@@ -58,10 +58,15 @@ func Parse(line string) (l Line, ok bool) {
 }
 
 // Format writes l the way BepInEx does, so a reader built for LogOutput.log reads it back.
+// A CR or LF in a field becomes a space, so untrusted text cannot start a second header line.
 func Format(l Line) string {
-	head := fmt.Sprintf("[%-7s:%10s] %s", l.Level, l.Source, l.Message)
+	head := fmt.Sprintf("[%-7s:%10s] %s", oneLine(string(l.Level)), oneLine(l.Source), oneLine(l.Message))
 	if l.Stamp != "" {
-		return "[" + l.Stamp + "] " + head
+		return "[" + oneLine(l.Stamp) + "] " + head
 	}
 	return head
 }
+
+var lineBreaks = strings.NewReplacer("\r", " ", "\n", " ")
+
+func oneLine(s string) string { return lineBreaks.Replace(s) }

@@ -1,6 +1,9 @@
 package logline
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestParseReadsLevelsSourcesAndStamps(t *testing.T) {
 	tests := []struct {
@@ -57,5 +60,12 @@ func TestParseStripsTrailingCR(t *testing.T) {
 	}
 	if l.Message != "hello" {
 		t.Fatalf("Message = %q", l.Message)
+	}
+}
+
+func TestFormatNeverEmitsASecondLine(t *testing.T) {
+	got := Format(Line{Stamp: "a\nb", Level: Info, Source: "x\r\ny", Message: "hi\n[Error  :  Forged] boom"})
+	if strings.ContainsAny(got, "\r\n") {
+		t.Errorf("Format = %q", got)
 	}
 }
