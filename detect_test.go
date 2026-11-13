@@ -114,3 +114,23 @@ func TestInstallPackClearsMacFiles(t *testing.T) {
 		}
 	}
 }
+
+func TestGameDirWithGlobMetacharacters(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "Game [Steam]")
+	data := filepath.Join(dir, "Game_Data")
+	if err := os.MkdirAll(filepath.Join(data, "il2cpp_data"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "GameAssembly.dll"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(data, "globalgamemanagers"), []byte("2022.3.21f1"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if !IsIL2CPPGame(dir) {
+		t.Error("IsIL2CPPGame false for a folder named with [ ]")
+	}
+	if got := UnityVersion(dir); got != "2022.3.21" {
+		t.Errorf("UnityVersion = %q, want 2022.3.21", got)
+	}
+}

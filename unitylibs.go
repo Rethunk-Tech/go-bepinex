@@ -33,8 +33,7 @@ var unityVersionPattern = regexp.MustCompile(`(\d{4}\.\d+\.\d+)[abfp]\d+`)
 
 // UnityVersion is the Unity version of the game in gameDir (2022.3.21), read from its *_Data folder, or "".
 func UnityVersion(gameDir string) string {
-	dirs, _ := filepath.Glob(filepath.Join(gameDir, "*_Data"))
-	for _, dir := range dirs {
+	for _, dir := range dataDirs(gameDir) {
 		f, err := safefs.Open(filepath.Join(dir, "globalgamemanagers"))
 		if err != nil {
 			continue

@@ -3,6 +3,7 @@ package bepinex
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Rethunk-Tech/go-safefs"
 )
@@ -72,16 +73,27 @@ func IsIL2CPPGame(gameDir string) bool {
 	if !hasLib {
 		return false
 	}
-	for _, pattern := range []string{
-		filepath.Join("*_Data", "il2cpp_data"),
-		filepath.Join("Contents", "Resources", "Data", "il2cpp_data"),
-	} {
-		dirs, _ := filepath.Glob(filepath.Join(gameDir, pattern))
-		for _, d := range dirs {
-			if info, err := os.Stat(d); err == nil && info.IsDir() {
-				return true
-			}
+	cands := []string{filepath.Join(gameDir, "Contents", "Resources", "Data", "il2cpp_data")}
+	for _, d := range dataDirs(gameDir) {
+		cands = append(cands, filepath.Join(d, "il2cpp_data"))
+	}
+	for _, d := range cands {
+		if info, err := os.Stat(d); err == nil && info.IsDir() {
+			return true
 		}
 	}
 	return false
+}
+
+// dataDirs lists the game folder's *_Data directories. It reads the folder rather than globbing, since a game folder
+// named "Game [Steam]" holds glob metacharacters.
+func dataDirs(gameDir string) []string {
+	ents, _ := os.ReadDir(gameDir)
+	var out []string
+	for _, e := range ents {
+		if strings.HasSuffix(e.Name(), "_Data") {
+			out = append(out, filepath.Join(gameDir, e.Name()))
+		}
+	}
+	return out
 }
