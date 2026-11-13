@@ -130,6 +130,16 @@ func TestPlaceUnityLibsRefusesAZipThatLeavesItsFolder(t *testing.T) {
 	}
 }
 
+func TestPlaceUnityLibsRefusesABackslashZipSlip(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(unityZip(t, `..\..\evil.dll`))
+	}))
+	defer srv.Close()
+	if err := placeUnityLibs(t.Context(), srv.URL+"/", unityGame(t), t.TempDir(), t.TempDir()); err == nil {
+		t.Fatal("an escaping entry was kept")
+	}
+}
+
 // A cached copy that no longer checks out is dropped, not copied into the profile.
 func TestPlaceUnityLibsRechecksTheCachedCopy(t *testing.T) {
 	cache := t.TempDir()

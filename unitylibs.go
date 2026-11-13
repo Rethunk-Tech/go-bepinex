@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/Rethunk-Tech/go-httpkit"
@@ -113,7 +114,7 @@ func checkUnityZip(b []byte) error {
 	}
 	var total uint64
 	for _, f := range zr.File {
-		if !filepath.IsLocal(filepath.FromSlash(f.Name)) {
+		if !filepath.IsLocal(filepath.FromSlash(strings.ReplaceAll(f.Name, `\`, "/"))) {
 			return fmt.Errorf("entry %q leaves the folder", f.Name)
 		}
 		total += f.UncompressedSize64
