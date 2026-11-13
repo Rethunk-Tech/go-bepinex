@@ -154,7 +154,7 @@ func TestInstallPackFailureKeepsPreviousPack(t *testing.T) {
 	if _, err := InstallPack(buildPack(t, "3.0"), profile); err == nil {
 		t.Fatal("install over a non-empty directory succeeded")
 	}
-	if b, err := os.ReadFile(filepath.Join(profile, "winhttp.dll")); err != nil || string(b) != "old" {
+	if b, err := safefs.ReadFile(filepath.Join(profile, "winhttp.dll")); err != nil || string(b) != "old" {
 		t.Errorf("previous proxy = %q, %v", b, err)
 	}
 	if _, err := os.Stat(filepath.Join(profile, "doorstop_config.ini")); err == nil {
