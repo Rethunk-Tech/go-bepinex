@@ -100,13 +100,13 @@ func TestInstallPackAndDoorstopFiles(t *testing.T) {
 }
 
 func TestInstallPackThroughASymlinkOntoAnotherDevice(t *testing.T) {
-	real, err := os.MkdirTemp("/dev/shm", "bepinex-profile-*")
+	targetRoot, err := os.MkdirTemp("/dev/shm", "bepinex-profile-*")
 	if err != nil {
 		t.Skip(err)
 	}
-	t.Cleanup(func() { _ = os.RemoveAll(real) })
+	t.Cleanup(func() { _ = os.RemoveAll(targetRoot) })
 	root := filepath.Join(t.TempDir(), "profile")
-	if err := os.Symlink(real, root); err != nil {
+	if err := os.Symlink(targetRoot, root); err != nil {
 		t.Fatal(err)
 	}
 	writeAt(t, filepath.Join(root, "winhttp.dll"), []byte("old-proxy"))
