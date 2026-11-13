@@ -49,3 +49,13 @@ func TestFormatWritesLinesBackInBepInExsFormat(t *testing.T) {
 		}
 	}
 }
+
+func TestParseStripsTrailingCR(t *testing.T) {
+	l, ok := Parse("[Info   :   BepInEx] hello\r")
+	if !ok {
+		t.Fatal("Parse rejected a Windows log line")
+	}
+	if l.Message != "hello" {
+		t.Fatalf("Message = %q", l.Message)
+	}
+}

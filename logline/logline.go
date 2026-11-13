@@ -54,7 +54,7 @@ func Parse(line string) (l Line, ok bool) {
 	if m == nil {
 		return Line{}, false
 	}
-	return Line{Stamp: st, Level: Level(m[1]), Source: strings.TrimSpace(m[2]), Message: m[3]}, true
+	return Line{Stamp: st, Level: Level(m[1]), Source: strings.TrimSpace(m[2]), Message: strings.TrimSuffix(m[3], "\r")}, true
 }
 
 // Format writes l the way BepInEx does, so a reader built for LogOutput.log reads it back.
