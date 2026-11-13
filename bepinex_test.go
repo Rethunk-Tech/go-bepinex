@@ -99,6 +99,25 @@ func TestInstallPackAndDoorstopFiles(t *testing.T) {
 	}
 }
 
+func TestInstallPackThroughASymlinkOntoAnotherDevice(t *testing.T) {
+	real, err := os.MkdirTemp("/dev/shm", "bepinex-profile-*")
+	if err != nil {
+		t.Skip(err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(real) })
+	root := filepath.Join(t.TempDir(), "profile")
+	if err := os.Symlink(real, root); err != nil {
+		t.Fatal(err)
+	}
+	writeAt(t, filepath.Join(root, "winhttp.dll"), []byte("old-proxy"))
+	if _, err := InstallPack(buildPack(t, "4.3.0.0\n"), root); err != nil {
+		t.Fatal(err)
+	}
+	if !safefs.IsDir(filepath.Join(root, "BepInEx", "core")) {
+		t.Fatal("pack not installed")
+	}
+}
+
 func TestInstallPackRefusesWhatClimbsOut(t *testing.T) {
 	parent := t.TempDir()
 	root := filepath.Join(parent, "profile")

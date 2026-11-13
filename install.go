@@ -54,8 +54,8 @@ func InstallPack(zipPath, profileRoot string) (Installed, error) {
 	if err := os.MkdirAll(profileRoot, 0o750); err != nil {
 		return Installed{}, err
 	}
-	// Beside the profile, so the final moves stay on one file system.
-	tmp, err := os.MkdirTemp(filepath.Dir(profileRoot), ".bepinex-pack-*")
+	// Inside the profile so a symlink to another device does not put the scratch on the link's parent filesystem.
+	tmp, err := os.MkdirTemp(profileRoot, ".bepinex-pack-*")
 	if err != nil {
 		return Installed{}, err
 	}
