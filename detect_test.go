@@ -134,3 +134,15 @@ func TestGameDirWithGlobMetacharacters(t *testing.T) {
 		t.Errorf("UnityVersion = %q, want 2022.3.21", got)
 	}
 }
+
+func TestRewriteConfigAppendsTargetInItsSection(t *testing.T) {
+	in := "[UnityDoorstop]\r\nenabled=true\r\n\r\n[Il2Cpp]\r\ncoreclr_path=x\r\n"
+	got := rewriteConfig(in, map[string]string{}, func(string) (string, bool) { return "", false }, 4, "T")
+	want := "[UnityDoorstop]\r\ntarget_assembly=T\r\nenabled=true\r\n\r\n[Il2Cpp]\r\ncoreclr_path=x\r\n"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+	if got := rewriteConfig("a=b\n", nil, func(string) (string, bool) { return "", false }, 3, "T"); got != "a=b\ntargetAssembly=T\n" {
+		t.Errorf("flat config: got %q", got)
+	}
+}

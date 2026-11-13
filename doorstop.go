@@ -65,7 +65,7 @@ func WriteAbsoluteConfig(profileRoot, dst string, doorstopMajor int, proton bool
 		values["coreclr_path"] = HostPath(profileRoot, coreclr, proton)
 	}
 	resolve := func(value string) (string, bool) { return profilePath(profileRoot, value, proton) }
-	return safefs.WriteFile(dst, []byte(rewriteConfig(string(b), values, resolve, doorstopMajor, target)), 0o600)
+	return safefs.WriteFileAtomic(dst, []byte(rewriteConfig(string(b), values, resolve, doorstopMajor, target)), 0o600)
 }
 
 // rewriteConfig sets each key in values and each runtimePathKeys key resolve accepts, leaving every other line as it
@@ -94,7 +94,19 @@ func rewriteConfig(text string, values map[string]string, resolve func(string) (
 		if doorstopMajor >= 4 {
 			key = "target_assembly"
 		}
-		lines = append(lines, key+"="+target)
+		eol := ""
+		if strings.Contains(text, "\r\n") {
+			eol = "\r"
+		}
+		add := key + "=" + target + eol
+		// Doorstop 4 reads the key from [UnityDoorstop]; at the end of the file it can land in another section.
+		if i := slices.IndexFunc(lines, func(l string) bool { return strings.EqualFold(strings.TrimSpace(l), "[UnityDoorstop]") }); i >= 0 {
+			lines = slices.Insert(lines, i+1, add)
+		} else if n := len(lines); n > 0 && lines[n-1] == "" {
+			lines = slices.Insert(lines, n-1, add)
+		} else {
+			lines = append(lines, add)
+		}
 	}
 	return strings.Join(lines, "\n")
 }
