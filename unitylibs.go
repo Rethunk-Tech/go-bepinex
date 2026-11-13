@@ -117,10 +117,10 @@ func checkUnityZip(b []byte) error {
 		if !filepath.IsLocal(filepath.FromSlash(strings.ReplaceAll(f.Name, `\`, "/"))) {
 			return fmt.Errorf("entry %q leaves the folder", f.Name)
 		}
+		if f.UncompressedSize64 > maxUnityLibsUnpacked-total {
+			return errors.New("unpacks too large")
+		}
 		total += f.UncompressedSize64
-	}
-	if total > maxUnityLibsUnpacked {
-		return errors.New("unpacks too large")
 	}
 	return nil
 }

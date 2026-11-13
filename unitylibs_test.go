@@ -153,3 +153,24 @@ func TestPlaceUnityLibsRechecksTheCachedCopy(t *testing.T) {
 		t.Fatal("a tampered cache survived")
 	}
 }
+
+func TestCheckUnityZipRefusesSizeOverflow(t *testing.T) {
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	for _, name := range []string{"a.dll", "b.dll"} {
+		if _, err := zw.CreateRaw(&zip.FileHeader{
+			Name:               name,
+			Method:             zip.Store,
+			UncompressedSize64: 1 << 63,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	err := checkUnityZip(buf.Bytes())
+	if err == nil || err.Error() != "unpacks too large" {
+		t.Fatalf("got %v", err)
+	}
+}
