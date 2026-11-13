@@ -71,9 +71,13 @@ func InstallPack(zipPath, profileRoot string) (Installed, error) {
 	if info, err := safefs.Stat(filepath.Join(tmp, "manifest.json")); err == nil && info.Mode().IsRegular() && info.Size() <= maxManifestBytes {
 		manifest, _ = safefs.ReadFile(filepath.Join(tmp, "manifest.json"))
 	}
-	if err := clearPack(profileRoot); err != nil {
+	stash := filepath.Join(tmp, ".previous-pack")
+	stashed, err := clearPack(profileRoot, stash)
+	if err != nil {
+		restorePack(profileRoot, stash, stashed, nil)
 		return Installed{}, err
 	}
+	var placed []string
 	err = filepath.WalkDir(src, func(p string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
@@ -92,9 +96,14 @@ func InstallPack(zipPath, profileRoot string) (Installed, error) {
 				return nil
 			}
 		}
-		return safefs.Rename(p, dst)
+		if err := safefs.Rename(p, dst); err != nil {
+			return err
+		}
+		placed = append(placed, dst)
+		return nil
 	})
 	if err != nil {
+		restorePack(profileRoot, stash, stashed, placed)
 		return Installed{}, err
 	}
 	return Installed{Manifest: manifest, Doorstop: doorstopMajor(profileRoot)}, nil
@@ -118,30 +127,61 @@ func extract(zipPath, dest string) error {
 	return archive.Extract(f, info.Size(), filepath.Base(zipPath), root, archive.Options{})
 }
 
-// clearPack removes the Doorstop files and BepInEx core a previous pack laid out, so a pack installed over another
-// keeps none of its files: a newer pack's .doorstop_version left behind would make a caller pass Doorstop 4 flags to
-// an older Doorstop 3 proxy, which then never starts BepInEx. A mod's own core files sit in folders below core and stay.
-func clearPack(profileRoot string) error {
-	for _, name := range append(append([]string{doorstopFile, doorstopConfig, "doorstop_libs", macScript, "libdoorstop.dylib"}, proxies...), packRuntimeDirs...) {
-		if err := safefs.RemoveAll(filepath.Join(profileRoot, name)); err != nil {
+// clearPack moves the Doorstop files and BepInEx core a previous pack laid out into stash, so a pack installed over
+// another keeps none of its files: a newer pack's .doorstop_version left behind would make a caller pass Doorstop 4
+// flags to an older Doorstop 3 proxy, which then never starts BepInEx. A mod's own core files sit in folders below core
+// and stay. It returns the profile-relative paths it moved, for restorePack.
+func clearPack(profileRoot, stash string) ([]string, error) {
+	var moved []string
+	take := func(rel string) error {
+		if _, err := os.Lstat(filepath.Join(profileRoot, rel)); errors.Is(err, fs.ErrNotExist) {
+			return nil
+		} else if err != nil {
 			return err
 		}
-	}
-	core := filepath.Join(profileRoot, "BepInEx", "core")
-	ents, err := os.ReadDir(core)
-	if errors.Is(err, fs.ErrNotExist) {
+		dst := filepath.Join(stash, rel)
+		if err := os.MkdirAll(filepath.Dir(dst), 0o750); err != nil {
+			return err
+		}
+		if err := safefs.Rename(filepath.Join(profileRoot, rel), dst); err != nil {
+			return err
+		}
+		moved = append(moved, rel)
 		return nil
+	}
+	for _, name := range append(append([]string{doorstopFile, doorstopConfig, "doorstop_libs", macScript, "libdoorstop.dylib"}, proxies...), packRuntimeDirs...) {
+		if err := take(name); err != nil {
+			return moved, err
+		}
+	}
+	core := filepath.Join("BepInEx", "core")
+	ents, err := os.ReadDir(filepath.Join(profileRoot, core))
+	if errors.Is(err, fs.ErrNotExist) {
+		return moved, nil
 	} else if err != nil {
-		return err
+		return moved, err
 	}
 	for _, e := range ents {
 		if !e.IsDir() {
-			if err := safefs.RemoveAll(filepath.Join(core, e.Name())); err != nil {
-				return err
+			if err := take(filepath.Join(core, e.Name())); err != nil {
+				return moved, err
 			}
 		}
 	}
-	return nil
+	return moved, nil
+}
+
+// restorePack undoes a failed install: it removes the files already placed and puts the stashed ones back. Restoring
+// is best effort; the original error is what the caller needs.
+func restorePack(profileRoot, stash string, stashed, placed []string) {
+	for _, dst := range placed {
+		_ = safefs.RemoveAll(dst)
+	}
+	for _, rel := range stashed {
+		dst := filepath.Join(profileRoot, rel)
+		_ = safefs.RemoveAll(dst)
+		_ = safefs.Rename(filepath.Join(stash, rel), dst)
+	}
 }
 
 // packRoot is the folder of the extracted pack that holds an entry assembly: a top-level folder, or dir itself.
