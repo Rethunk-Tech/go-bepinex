@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -100,8 +101,8 @@ func TestInstallPackAndDoorstopFiles(t *testing.T) {
 }
 
 func TestInstallPackThroughASymlinkOntoAnotherDevice(t *testing.T) {
-	targetRoot, err := os.MkdirTemp("/dev/shm", "bepinex-profile-*")
-	if err != nil {
+	targetRoot := filepath.Join("/dev/shm", "bepinex-profile-"+strconv.Itoa(os.Getpid()))
+	if err := os.Mkdir(targetRoot, 0o700); err != nil {
 		t.Skip(err)
 	}
 	t.Cleanup(func() { _ = os.RemoveAll(targetRoot) })
