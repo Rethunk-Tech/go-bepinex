@@ -1,6 +1,7 @@
 package bepinex
 
 import (
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -39,9 +40,18 @@ func PlacementFor(profileRoot, goos string) Placement {
 		p.LaunchOption = LaunchOption(HostPath(profileRoot, macScript, false))
 	}
 	for _, dir := range []string{"", "doorstop_libs"} {
-		libs, _ := filepath.Glob(filepath.Join(profileRoot, dir, "libdoorstop*.dylib"))
-		for _, l := range libs {
-			rel, _ := filepath.Rel(profileRoot, l)
+		// Match the filename only: filepath.Glob would treat [ ] * in profileRoot as metacharacters.
+		ents, err := os.ReadDir(filepath.Join(profileRoot, dir))
+		if err != nil {
+			continue
+		}
+		for _, e := range ents {
+			name := e.Name()
+			ok, _ := filepath.Match("libdoorstop*.dylib", name)
+			if !ok {
+				continue
+			}
+			rel, _ := filepath.Rel(profileRoot, filepath.Join(profileRoot, dir, name))
 			p.Files = append(p.Files, filepath.ToSlash(rel))
 			p.Executable = append(p.Executable, filepath.ToSlash(rel))
 		}
