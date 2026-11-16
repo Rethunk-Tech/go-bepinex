@@ -71,7 +71,11 @@ func InstallPack(zipPath, profileRoot string) (Installed, error) {
 	if info, err := safefs.Stat(filepath.Join(tmp, "manifest.json")); err == nil && info.Mode().IsRegular() && info.Size() <= maxManifestBytes {
 		manifest, _ = safefs.ReadFile(filepath.Join(tmp, "manifest.json"))
 	}
-	stash := filepath.Join(tmp, ".previous-pack")
+	stash, err := os.MkdirTemp(profileRoot, ".bepinex-previous-*")
+	if err != nil {
+		return Installed{}, err
+	}
+	defer func() { _ = safefs.RemoveAll(stash) }()
 	stashed, err := clearPack(profileRoot, stash)
 	if err != nil {
 		restorePack(profileRoot, stash, stashed, nil)

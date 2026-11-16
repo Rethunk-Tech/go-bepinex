@@ -190,6 +190,56 @@ func TestAnOlderPackOverANewerOneKeepsNoneOfItsFiles(t *testing.T) {
 	}
 }
 
+// A zip with BepInEx/ at its top is laid out from the scratch folder itself, so the previous pack's stash cannot sit
+// where that walk would lay it into the profile: a failed reinstall has to leave the previous pack's files in place.
+func TestAFailedTopLevelReinstallKeepsThePreviousPack(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "profile")
+	old := map[string]string{
+		".doorstop_version":                "4.5.0",
+		"doorstop_config.ini":              "[General]\r\ntarget_assembly = BepInEx\\core\\BepInEx.Preloader.dll\r\n",
+		"winhttp.dll":                      "old-proxy",
+		"doorstop_libs/x64/libdoorstop.so": "old-lib",
+		// A mod's core folder named like the entry assembly, so the pack's file at that name cannot be placed.
+		"BepInEx/core/BepInEx.Preloader.dll/nested.txt": "mod",
+	}
+	for name, body := range old {
+		writeAt(t, filepath.Join(root, name), []byte(body))
+	}
+	if _, err := InstallPack(buildPackIn(t, "", "4.3.0.0\n"), root); err == nil {
+		t.Fatal("a pack installed over a folder named like its own entry assembly")
+	}
+	for name, body := range old {
+		if b, err := safefs.ReadFile(filepath.Join(root, name)); err != nil || string(b) != body {
+			t.Fatalf("%s after a failed reinstall: %q, %v", name, b, err)
+		}
+	}
+}
+
+// A successful reinstall from a zip with BepInEx/ at its top leaves the old pack's files nowhere: the stash they were
+// moved into is scratch, not a folder of the profile.
+func TestATopLevelReinstallLeavesNoStash(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "profile")
+	if _, err := InstallPack(buildPack(t, "4.3.0.0"), root); err != nil {
+		t.Fatal(err)
+	}
+	writeAt(t, filepath.Join(root, "winhttp.dll"), []byte("old-proxy"))
+	if _, err := InstallPack(buildPackIn(t, "", "4.5.0"), root); err != nil {
+		t.Fatal(err)
+	}
+	ents, err := os.ReadDir(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range ents {
+		if name := e.Name(); name == ".previous-pack" || strings.HasPrefix(name, ".bepinex-") {
+			t.Fatalf("%s left in the profile", name)
+		}
+	}
+	if b, _ := safefs.ReadFile(filepath.Join(root, "winhttp.dll")); string(b) != "proxy" {
+		t.Fatalf("winhttp.dll after the reinstall: %q", b)
+	}
+}
+
 // An IL2CPP pack starts through its own entry assembly on the .NET runtime it ships, which Doorstop finds only through
 // absolute paths, since it reads relative ones from the game folder.
 func TestAnIL2CPPPackStartsThroughItsRuntime(t *testing.T) {
@@ -353,6 +403,28 @@ func TestAPackWhoseProxyIsVersionDllLoadsThatOne(t *testing.T) {
 	}
 	if got := strings.Join(DoorstopFiles(profile, "winhttp.dll"), " "); got != "doorstop_config.ini winhttp.dll" || safefs.IsFile(filepath.Join(profile, "version.dll")) {
 		t.Fatalf("placed %q after the swap", got)
+	}
+}
+
+// A folder named like an entry assembly is not a pack: installing it would point Doorstop at a directory and start
+// nothing, so neither the zip nor a profile's own folder counts as an entry.
+func TestAFolderNamedLikeAnEntryAssemblyIsNotAPack(t *testing.T) {
+	zipPath := writeZip(t, map[string]string{
+		"BepInExPack/winhttp.dll":                                   "proxy",
+		"BepInExPack/BepInEx/core/BepInEx.Preloader.dll/nested.txt": "x",
+	})
+	profile := filepath.Join(t.TempDir(), "profile")
+	if _, err := InstallPack(zipPath, profile); err == nil {
+		t.Fatal("a folder named like an entry assembly installed")
+	}
+	if _, err := os.Stat(filepath.Join(profile, "winhttp.dll")); err == nil {
+		t.Fatal("a refused pack touched the profile")
+	}
+	root := filepath.Join(t.TempDir(), "profile")
+	writeAt(t, filepath.Join(root, "BepInEx", "core", "BepInEx.Preloader.dll", "nested.txt"), []byte("x"))
+	writeAt(t, filepath.Join(root, "BepInEx", "core", "BepInEx.IL2CPP.dll"), []byte("entry"))
+	if got := Entry(root); got != filepath.Join("BepInEx", "core", "BepInEx.IL2CPP.dll") {
+		t.Fatalf("Entry = %q over a folder named like an entry assembly", got)
 	}
 }
 
