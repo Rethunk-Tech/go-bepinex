@@ -1,6 +1,8 @@
 package bepinex
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -17,5 +19,16 @@ func TestRewriteConfigInsertsDoorstopMajorTargetKey(t *testing.T) {
 	got3 := rewriteConfig("target_assembly=old.dll\n", values, nil, 3, target)
 	if !strings.Contains(got3, "targetAssembly="+target) {
 		t.Fatalf("doorstop 3 missing camel key:\n%s", got3)
+	}
+}
+
+func TestDoorstopFilesSkipsConfigDirectory(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, "doorstop_config.ini"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	got := DoorstopFiles(root, "winhttp.dll")
+	if len(got) != 0 {
+		t.Fatalf("DoorstopFiles = %q, want none", got)
 	}
 }

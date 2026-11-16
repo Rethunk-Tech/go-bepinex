@@ -35,7 +35,7 @@ func Proxy(profileRoot, fallback string) string {
 func DoorstopFiles(profileRoot, fallback string) []string {
 	var files []string
 	for _, name := range []string{doorstopConfig, Proxy(profileRoot, fallback)} {
-		if _, err := os.Stat(filepath.Join(profileRoot, name)); err == nil {
+		if safefs.IsFile(filepath.Join(profileRoot, name)) {
 			files = append(files, name)
 		}
 	}
