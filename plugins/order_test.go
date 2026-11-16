@@ -71,3 +71,84 @@ func TestLoadable(t *testing.T) {
 		}
 	}
 }
+
+func TestLoadOrderDropsMissingHardDependency(t *testing.T) {
+	order, skipped := LoadOrder([]dotnet.Declared{
+		{
+			Plugins:   []dotnet.Plugin{{GUID: "needdep", Name: "needdep", Version: "1.0.0"}},
+			Relations: []dotnet.Relation{{Plugin: "needdep", GUID: "dep", Kind: dotnet.HardDependency}},
+		},
+		{Plugins: []dotnet.Plugin{{GUID: "ok", Name: "ok", Version: "1.0.0"}}},
+	})
+	assertOrder(t, order, "ok")
+	assertSkipped(t, skipped, skipWant{"needdep", "missing dependency dep"})
+}
+
+func TestLoadOrderDropsIncompatible(t *testing.T) {
+	order, skipped := LoadOrder([]dotnet.Declared{
+		{
+			Plugins:   []dotnet.Plugin{{GUID: "a", Name: "a", Version: "1.0.0"}},
+			Relations: []dotnet.Relation{{Plugin: "a", GUID: "b", Kind: dotnet.Incompatible}},
+		},
+		{Plugins: []dotnet.Plugin{{GUID: "b", Name: "b", Version: "1.0.0"}}},
+	})
+	assertOrder(t, order, "b")
+	assertSkipped(t, skipped, skipWant{"a", "incompatible with b"})
+}
+
+func TestLoadOrderDropsBelowMinVersion(t *testing.T) {
+	order, skipped := LoadOrder([]dotnet.Declared{
+		{
+			Plugins: []dotnet.Plugin{{GUID: "needver", Name: "needver", Version: "1.0.0"}},
+			Relations: []dotnet.Relation{{
+				Plugin: "needver", GUID: "dep", Kind: dotnet.HardDependency, MinVersion: "2.0.0",
+			}},
+		},
+		{Plugins: []dotnet.Plugin{{GUID: "dep", Name: "dep", Version: "1.0.0"}}},
+	})
+	assertOrder(t, order, "dep")
+	assertSkipped(t, skipped, skipWant{"needver", "dep below MinVersion 2.0.0"})
+}
+
+func TestLoadOrderDropsHardDependentsOfSkipped(t *testing.T) {
+	order, skipped := LoadOrder([]dotnet.Declared{
+		{
+			Plugins:   []dotnet.Plugin{{GUID: "mid", Name: "mid", Version: "1.0.0"}},
+			Relations: []dotnet.Relation{{Plugin: "mid", GUID: "missing", Kind: dotnet.HardDependency}},
+		},
+		{
+			Plugins:   []dotnet.Plugin{{GUID: "leaf", Name: "leaf", Version: "1.0.0"}},
+			Relations: []dotnet.Relation{{Plugin: "leaf", GUID: "mid", Kind: dotnet.HardDependency}},
+		},
+		{Plugins: []dotnet.Plugin{{GUID: "ok", Name: "ok", Version: "1.0.0"}}},
+	})
+	assertOrder(t, order, "ok")
+	assertSkipped(t, skipped,
+		skipWant{"mid", "missing dependency missing"},
+		skipWant{"leaf", "missing dependency mid"},
+	)
+}
+
+type skipWant struct{ guid, reason string }
+
+func assertOrder(t *testing.T, order []Loaded, want ...string) {
+	t.Helper()
+	var got []string
+	for _, l := range order {
+		got = append(got, l.GUID)
+	}
+	if !slices.Equal(got, want) {
+		t.Fatalf("order %v, want %v", got, want)
+	}
+}
+
+func assertSkipped(t *testing.T, skipped []Skipped, want ...skipWant) {
+	t.Helper()
+	var got []skipWant
+	for _, s := range skipped {
+		got = append(got, skipWant{s.GUID, s.Reason})
+	}
+	if !slices.Equal(got, want) {
+		t.Fatalf("skipped %v, want %v", got, want)
+	}
+}
