@@ -24,7 +24,7 @@ func TestRewriteConfigInsertsDoorstopMajorTargetKey(t *testing.T) {
 
 func TestDoorstopFilesSkipsConfigDirectory(t *testing.T) {
 	root := t.TempDir()
-	if err := os.Mkdir(filepath.Join(root, "doorstop_config.ini"), 0o755); err != nil {
+	if err := os.Mkdir(filepath.Join(root, "doorstop_config.ini"), 0o750); err != nil {
 		t.Fatal(err)
 	}
 	got := DoorstopFiles(root, "winhttp.dll")
