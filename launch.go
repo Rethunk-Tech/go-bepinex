@@ -28,7 +28,7 @@ var coreclr = filepath.Join("dotnet", "coreclr.dll")
 // BepInEx 5 preloader when no entry assembly is installed.
 func Entry(profileRoot string) string {
 	for _, e := range entries {
-		if _, err := os.Stat(filepath.Join(profileRoot, e)); err == nil {
+		if regular(filepath.Join(profileRoot, e)) {
 			return e
 		}
 	}

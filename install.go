@@ -211,11 +211,18 @@ func packRoot(dir string) (string, error) {
 
 func hasEntry(dir string) bool {
 	for _, e := range entries {
-		if _, err := os.Stat(filepath.Join(dir, e)); err == nil {
+		if regular(filepath.Join(dir, e)) {
 			return true
 		}
 	}
 	return false
+}
+
+// regular reports whether p is a regular file. A folder named like an entry assembly would otherwise count as a pack,
+// and Doorstop would be pointed at a directory and start nothing.
+func regular(p string) bool {
+	info, err := os.Stat(p)
+	return err == nil && info.Mode().IsRegular()
 }
 
 func doorstopMajor(profileRoot string) int {
