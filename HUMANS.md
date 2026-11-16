@@ -12,30 +12,30 @@ go get github.com/Rethunk-Tech/go-bepinex
 package main
 
 import (
-	"fmt"
-	"log"
-	"path/filepath"
+ "fmt"
+ "log"
+ "path/filepath"
 
-	"github.com/Rethunk-Tech/go-bepinex"
-	"github.com/Rethunk-Tech/go-bepinex/wineoverride"
+ "github.com/Rethunk-Tech/go-bepinex"
+ "github.com/Rethunk-Tech/go-bepinex/wineoverride"
 )
 
 func main() {
-	profile := "/home/me/profiles/default"
-	pack, err := bepinex.InstallPack("BepInExPack.zip", profile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Copy these beside the game executable.
-	fmt.Println(bepinex.DoorstopFiles(profile, "winhttp.dll"))
-	// Pass these to the game; true gives Wine Z: paths for Proton.
-	fmt.Println(bepinex.LaunchArgs(profile, pack.Doorstop, true))
+ profile := "/home/me/profiles/default"
+ pack, err := bepinex.InstallPack("BepInExPack.zip", profile)
+ if err != nil {
+  log.Fatal(err)
+ }
+ // Copy these beside the game executable.
+ fmt.Println(bepinex.DoorstopFiles(profile, "winhttp.dll"))
+ // Pass these to the game; true gives Wine Z: paths for Proton.
+ fmt.Println(bepinex.LaunchArgs(profile, pack.Doorstop, true))
 
-	// Proton only: load the proxy natively. The prefix's Wine must not be running.
-	reg := filepath.Join("/home/me/prefix", "user.reg")
-	if err := wineoverride.Ensure(reg, "winhttp", reg+".bak"); err != nil {
-		log.Fatal(err)
-	}
+ // Proton only: load the proxy natively. The prefix's Wine must not be running.
+ reg := filepath.Join("/home/me/prefix", "user.reg")
+ if err := wineoverride.Ensure(reg, "winhttp", reg+".bak"); err != nil {
+  log.Fatal(err)
+ }
 }
 ```
 
@@ -61,8 +61,8 @@ func main() {
 | `plugins.DLLs(dir)` | Regular `.dll` files under an absolute `dir`; symlinks are never followed, a relative `dir` gives nil. |
 | `plugins.PluginFile(dir, "name version")` | The DLL declaring that plugin, or "". |
 | `plugins.Owners(dirs)` | Lower-cased GUID, name, "name version" and a root namespace used by exactly one folder, to that folder's index. |
-| `plugins.LoadOrder(assemblies)` / `Loadable(p)` | BepInEx 5.4.23's order: newest copy per GUID, versions read as `System.Version` (an unreadable one never loads), GUIDs sorted caselessly, dependencies first; `Cycle` marks plugins in a dependency cycle. |
-| `logline.Parse(line)` | A `[Level  :  Source] message` header, optionally behind a `[stamp] `; false for continuation lines. |
+| `plugins.LoadOrder(assemblies)` / `Loadable(p)` | BepInEx 5.4.23's order: newest copy per GUID, versions read as `System.Version` (an unreadable one never loads), GUIDs sorted caselessly, dependencies first; `Cycle` marks plugins in a dependency cycle. Plugins with a missing hard dependency, a dependency below MinVersion, or a present incompatibility are omitted and returned in skipped with the reason; a skip cascades to plugins that hard-depend on it. |
+| `logline.Parse(line)` | A `[Level  :  Source] message` header, optionally behind a `[stamp]`; false for continuation lines. |
 | `logline.SplitStamp(line)` / `Format(l)` | The stamp and the rest of a line; a `Line` written back as BepInEx pads it. |
 | `wineoverride.Ensure(userReg, dll, backup)` | Idempotent; refuses a `dll` that is empty or has `"`, `\`, `=` or control characters (`ErrBadName`); copies the original to `backup` once when it is not empty. |
 | `wineoverride.ZPath(p)` | `Z:\...` form of a host path; meaningful on a Unix host only. |

@@ -29,7 +29,7 @@ A worked example and the contracts: [HUMANS.md](HUMANS.md).
 - `WriteAbsoluteConfig` makes a `doorstop_config.ini` that works from the game folder.
 - `PlaceUnityLibs` keeps and places the Unity base libraries an IL2CPP game needs.
 - `plugins.ScanDir`, `ScanEach`, `PluginsIn`, `DLLs` and `PluginFile` read which BepInEx plugins the DLLs in a folder declare, through go-dotnet; `Owners` maps the names a log uses to the folder that declares them.
-- `plugins.LoadOrder` and `Loadable` give the order BepInEx 5's chainloader loads plugins in, dependencies first.
+- `plugins.LoadOrder` and `Loadable` give the order BepInEx 5's chainloader loads plugins in, dependencies first, and the plugins it skips.
 - `logline.Parse`, `SplitStamp` and `Format` read and write `LogOutput.log` header lines, with a logger mod's timestamp.
 - `wineoverride.Ensure` sets a `native,builtin` DLL override in a Proton prefix's `user.reg`.
 

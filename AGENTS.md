@@ -52,6 +52,6 @@ since the `Z:` drive maps a Unix root.
 | `launch.go` | `Entry`, `HasCLR`, `HostPath`, `LaunchArgs`, `VanillaArgs` |
 | `unitylibs.go` | `UnityVersion`, `PlaceUnityLibs` |
 | `plugins/dir.go` | `ScanDir`, `ScanEach`, `PluginsIn`, `DLLs`, `PluginFile`, `Owners` |
-| `plugins/order.go` | `LoadOrder`, `Loadable`, `Loaded` |
+| `plugins/order.go` | `LoadOrder`, `Loadable`, `Loaded`, `Skipped` |
 | `logline/logline.go` | `Line`, `Level`, `Parse`, `SplitStamp`, `Format` |
 | `wineoverride/wineoverride.go` | `Ensure` (DllOverrides edit), `ZPath` |

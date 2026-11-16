@@ -15,7 +15,7 @@ func TestLoadOrderWalksGUIDsCaselessAndPutsDependenciesFirstInDeclaredOrder(t *t
 		}
 		return d
 	}
-	order := LoadOrder([]dotnet.Declared{
+	order, _ := LoadOrder([]dotnet.Declared{
 		asm("b", "1.0.0", "Z", "y"),
 		asm("y", "1.0.0"),
 		asm("Z", "1.0.0"),
@@ -54,7 +54,8 @@ func TestLoadOrderReadsVersionsAsSystemVersion(t *testing.T) {
 				ds = append(ds, dotnet.Declared{Plugins: []dotnet.Plugin{{GUID: "p", Name: v, Version: v}}})
 			}
 			var got []string
-			for _, l := range LoadOrder(ds) {
+			loaded, _ := LoadOrder(ds)
+			for _, l := range loaded {
 				got = append(got, l.Name)
 			}
 			if !slices.Equal(got, tt.want) {

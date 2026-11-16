@@ -17,6 +17,12 @@ type Loaded struct {
 	Cycle bool
 }
 
+// Skipped is a plugin the chainloader would not load.
+type Skipped struct {
+	Loaded
+	Reason string
+}
+
 // Loadable reports whether BepInEx would load the plugin: its version must parse as a System.Version
 // (Chainloader.cs, "version is invalid").
 func Loadable(p dotnet.Plugin) bool {
@@ -30,12 +36,16 @@ func Loadable(p dotnet.Plugin) bool {
 // declare them; that walk is the only tie-break. assemblies holds one Declared per DLL, so the dependencies are those of
 // the copy that loads.
 //
+// A plugin with a missing hard dependency, a hard dependency below MinVersion, or a BepInIncompatibility whose target is
+// present is omitted from the order and returned in skipped with that reason. A plugin skipped this way also skips
+// plugins that hard-depend on it.
+//
 // ponytail: GUIDs sort by lower-cased ordinal where BepInEx uses StringComparer.InvariantCultureIgnoreCase; they differ
 // only on punctuation such as '-' against letters, which no GUID in a 77-plugin real run hit.
-func LoadOrder(assemblies []dotnet.Declared) []Loaded {
-	newest := newestPlugins(assemblies)
+func LoadOrder(assemblies []dotnet.Declared) (order []Loaded, skipped []Skipped) {
+	newest, incompat := newestPlugins(assemblies)
 	keys := slices.Sorted(maps.Keys(newest))
-	var order []string
+	var sorted []string
 	cycle := map[string]bool{}
 	done := map[string]bool{}
 	var stack []string
@@ -57,23 +67,61 @@ func LoadOrder(assemblies []dotnet.Declared) []Loaded {
 		stack = stack[:len(stack)-1]
 		done[k] = true
 		if _, ok := newest[k]; ok {
-			order = append(order, k)
+			sorted = append(sorted, k)
 		}
 	}
 	for _, k := range keys {
 		visit(k)
 	}
-	out := make([]Loaded, len(order))
-	for i, k := range order {
-		out[i] = newest[k]
-		out[i].Cycle = cycle[k]
+	kept := map[string]Loaded{}
+	seen := map[string]bool{}
+	for _, k := range sorted {
+		l := newest[k]
+		l.Cycle = cycle[k]
+		if reason := skipReason(l, kept, newest, seen, incompat[k]); reason != "" {
+			skipped = append(skipped, Skipped{Loaded: l, Reason: reason})
+			seen[k] = true
+			continue
+		}
+		seen[k] = true
+		kept[k] = l
+		order = append(order, l)
 	}
-	return out
+	return order, skipped
+}
+
+func skipReason(l Loaded, kept, newest map[string]Loaded, seen map[string]bool, incompat []string) string {
+	for _, dep := range l.Deps {
+		if dep.Kind != dotnet.HardDependency {
+			continue
+		}
+		key := strings.ToLower(dep.GUID)
+		have, ok := kept[key]
+		if !ok {
+			if _, present := newest[key]; !present || seen[key] {
+				return "missing dependency " + dep.GUID
+			}
+			continue
+		}
+		if dep.MinVersion == "" {
+			continue
+		}
+		if c, ok := semverish.CompareDotNet(have.Version, dep.MinVersion); !ok || c < 0 {
+			return dep.GUID + " below MinVersion " + dep.MinVersion
+		}
+	}
+	for _, g := range incompat {
+		if _, ok := newest[strings.ToLower(g)]; ok {
+			return "incompatible with " + g
+		}
+	}
+	return ""
 }
 
 // newestPlugins keeps, per lower-cased GUID, the loadable plugin with the newest version, with its declared relations.
-func newestPlugins(assemblies []dotnet.Declared) map[string]Loaded {
+func newestPlugins(assemblies []dotnet.Declared) (map[string]Loaded, map[string][]string) {
 	newest := map[string]Loaded{}
+	incompat := map[string][]string{}
 	for _, d := range assemblies {
 		for _, p := range d.Plugins {
 			if !Loadable(p) {
@@ -86,13 +134,20 @@ func newestPlugins(assemblies []dotnet.Declared) map[string]Loaded {
 				}
 			}
 			l := Loaded{Plugin: p}
+			var inc []string
 			for _, r := range d.Relations {
-				if r.Plugin == p.GUID && r.Kind != dotnet.Incompatible {
-					l.Deps = append(l.Deps, r)
+				if r.Plugin != p.GUID {
+					continue
 				}
+				if r.Kind == dotnet.Incompatible {
+					inc = append(inc, r.GUID)
+					continue
+				}
+				l.Deps = append(l.Deps, r)
 			}
 			newest[key] = l
+			incompat[key] = inc
 		}
 	}
-	return newest
+	return newest, incompat
 }

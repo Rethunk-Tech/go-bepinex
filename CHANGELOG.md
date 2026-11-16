@@ -6,6 +6,10 @@ Notable changes to `go-bepinex`. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `plugins.LoadOrder` omits plugins the chainloader would skip (missing hard dependency, below MinVersion, or a present incompatibility) and returns them with the reason; a skip cascades to hard-dependents.
+
 ## [0.2.2] - 2026-11-07
 
 ### Fixed
