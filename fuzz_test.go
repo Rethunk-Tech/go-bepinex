@@ -24,8 +24,12 @@ func FuzzRewriteConfig(f *testing.F) {
 		if !strings.Contains(out, target) {
 			t.Fatalf("rewritten config lost target %q", target)
 		}
+		// Any line can be a known key with an empty value, so each grows by at most len(target); a
+		// config with no target line gains one more, plus its newline and its CR under CRLF.
 		n := strings.Count(text, "\n") + 1
-		if len(out) > len(text)+n+len("target_assembly=")+len(target)+1 {
+		added := len("target_assembly=") + len(target) + 2
+		bound := len(text) + n*len(target) + added
+		if len(out) > bound {
 			t.Fatalf("rewrite grew past bound: %d -> %d", len(text), len(out))
 		}
 		wantKey := "targetAssembly"
