@@ -42,8 +42,8 @@ github.com/OpenPeeDeeP/depguard/v2 v2.3.0 h1:AzcyrJSVScO5DztG8NB5XSKNeuxqgFsLQf+
 github.com/OpenPeeDeeP/depguard/v2 v2.3.0/go.mod h1:s0C87mbhDHS0xxt0K9kkxb+w+W1mdvgUyajfFs4AcfI=
 github.com/Rethunk-Tech/go-archive v0.3.1 h1:rCjMNlVfkDKRYfKd+UVIcNcBWS5cNTyU1BJli5mqVrs=
 github.com/Rethunk-Tech/go-archive v0.3.1/go.mod h1:ur2Otc8qDlDbjvqDK9dzwH3u6w47tAuISCIakFML/AE=
-github.com/Rethunk-Tech/go-dotnet v0.3.0 h1://IlbmPNpbnm9jHpaMikSj8b2iC2cTBn08X56AOR8a8=
-github.com/Rethunk-Tech/go-dotnet v0.3.0/go.mod h1:lJSyQ5mtaPq4P0bsIiKAkZICS56mAHJrBvQESSuiCS0=
+github.com/Rethunk-Tech/go-dotnet v0.4.0 h1:K2+6ibpHyLkr2xzojEa54Ml+LOY02LP2gaaH6RPPgkI=
+github.com/Rethunk-Tech/go-dotnet v0.4.0/go.mod h1:WVRjxZdbFAjECguCaO5/D9xF26Ank8rfTjlG5cOl0A8=
 github.com/Rethunk-Tech/go-httpkit v0.3.1 h1:TEMOQ488ENSWf4wAGtBkfIyWxUDrtcsM0WOTuRg0abM=
 github.com/Rethunk-Tech/go-httpkit v0.3.1/go.mod h1:VSo/w8IjHfEn+3P6OW/9513buuzPpWHE7aBbcm8FiJ0=
 github.com/Rethunk-Tech/go-safefs v0.9.1 h1:HfiNmSu4IGQVjDTTGeLOqCl4Xs45gyUcHKX+5PznJ18=
@@ -556,8 +556,8 @@ golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f/go.mod h1:oPkhp1MJrh7nUepCBc
 golang.org/x/sys v0.5.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.50.0 h1:dkKZEFTEKaLr1sjhs0WiKqoi8Jj5nHbS3Njmx1UoMJs=
 golang.org/x/sys v0.50.0/go.mod h1:hNLxWAXmnKAxqDtdwIYC4bM9oQPEecfsnNMuSxOs3og=
-golang.org/x/telemetry v0.0.0-20261111153349-cdaf7e97dd7b h1:HDLCiByjRbzmSn/z4+smkCRQ58Hr5yxP+pq4CwqwCv8=
-golang.org/x/telemetry v0.0.0-20261111153349-cdaf7e97dd7b/go.mod h1:frnW8knEsfI9dILitAKHe8/iQ1ycXgpvIjQ/xz9QFYk=
+golang.org/x/telemetry v0.0.0-20261116191925-e77a43154acb h1:juaHO1dWannznOvpnfdTIjkqPDBsG9OcdkOBTBlcUCA=
+golang.org/x/telemetry v0.0.0-20261116191925-e77a43154acb/go.mod h1:frnW8knEsfI9dILitAKHe8/iQ1ycXgpvIjQ/xz9QFYk=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/term v0.0.0-20210927222741-03fcf44c2211/go.mod h1:jbD1KX2456YbFQfuXm/mYQcufACuNUgVhRMnK/tPxf8=
 golang.org/x/term v0.5.0/go.mod h1:jMB1sMXY+tzblOD4FWmEbocvup2/aLOaQEp7JmGp78k=
