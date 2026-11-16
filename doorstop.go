@@ -72,6 +72,10 @@ func WriteAbsoluteConfig(profileRoot, dst string, doorstopMajor int, proton bool
 // was, and appends the target when no line carries it.
 func rewriteConfig(text string, values map[string]string, resolve func(string) (string, bool), doorstopMajor int, target string) string {
 	lines := strings.Split(text, "\n")
+	targetKey := "targetAssembly"
+	if doorstopMajor >= 4 {
+		targetKey = "target_assembly"
+	}
 	found := false
 	for i, line := range lines {
 		key, val, ok := strings.Cut(line, "=")
@@ -83,17 +87,15 @@ func rewriteConfig(text string, values map[string]string, resolve func(string) (
 		if !ok || !known {
 			continue
 		}
-		found = found || v == target
+		// Doorstop 4 reads only target_assembly; a camel line must not count as found.
+		found = found || k == targetKey
 		lines[i] = k + "=" + v
 		if strings.HasSuffix(line, "\r") {
 			lines[i] += "\r"
 		}
 	}
 	if !found {
-		key := "targetAssembly"
-		if doorstopMajor >= 4 {
-			key = "target_assembly"
-		}
+		key := targetKey
 		eol := ""
 		if strings.Contains(text, "\r\n") {
 			eol = "\r"
