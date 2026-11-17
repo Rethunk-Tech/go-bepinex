@@ -2,6 +2,7 @@ package wineoverride
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -70,6 +71,30 @@ func TestEnsureRefusesANameThatWouldEditAnotherLine(t *testing.T) {
 	}
 	if b, _ := safefs.ReadFile(reg); string(b) != "x\n" {
 		t.Fatalf("file changed: %q", b)
+	}
+	if err := Ensure(reg, "win http", ""); err != nil {
+		t.Fatalf("space in name: %v", err)
+	}
+}
+
+func TestEditAddsDllOverridesSection(t *testing.T) {
+	unix := int64(1_700_000_000)
+	now := func() int64 { return unix }
+	filetime := (unix + filetimeEpoch) * 10_000_000
+	section := fmt.Sprintf("%s %d\n#time=%x\n\"winhttp\"=\"native,builtin\"\n", dllOverridesHeader, unix, filetime)
+	cases := map[string]struct{ in, want string }{
+		"after trailing newline":             {"WINE REGISTRY Version 2\n", "WINE REGISTRY Version 2\n\n" + section},
+		"empty file":                         {"", "\n" + section},
+		"without trailing newline":           {"WINE REGISTRY Version 2", "WINE REGISTRY Version 2\n\n" + section},
+		"existing section, no final newline": {dllOverridesHeader + "\n\"dxgi\"=\"native,builtin\"", dllOverridesHeader + "\n\"dxgi\"=\"native,builtin\"\n\"winhttp\"=\"native,builtin\""},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			got, changed := edit(tc.in, "winhttp", now)
+			if !changed || got != tc.want {
+				t.Fatalf("changed=%v got:\n%q\nwant:\n%q", changed, got, tc.want)
+			}
+		})
 	}
 }
 
