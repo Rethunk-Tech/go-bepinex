@@ -17,6 +17,12 @@ func FuzzRewriteConfig(f *testing.F) {
 	f.Add("targetAssembly=BepInEx/core/BepInEx.Preloader.dll", 3)
 	f.Add("", 4)
 	f.Add("runtimeLib=dotnet\nconfigDir=BepInEx/config\n", 4)
+	if b, err := os.ReadFile("testdata/be6il2cpp/doorstop_config.ini"); err == nil {
+		f.Add(string(b), 4)
+	}
+	if b, err := os.ReadFile("testdata/be5/doorstop_config.ini"); err == nil {
+		f.Add(string(b), 3)
+	}
 	f.Fuzz(func(t *testing.T, text string, doorstopMajor int) {
 		const target = "T"
 		values := map[string]string{"targetAssembly": target, "target_assembly": target}
@@ -97,6 +103,59 @@ func FuzzCheckUnityZip(f *testing.F) {
 		}
 		if total > maxUnityLibsUnpacked {
 			t.Fatal("accepted zip that unpacks too large")
+		}
+	})
+}
+
+func FuzzProfilePath(f *testing.F) {
+	f.Add("dotnet", false)
+	f.Add("BepInEx/config", false)
+	f.Add(`BepInEx\core\BepInEx.Preloader.dll`, true)
+	f.Add(`..\outside`, false)
+	f.Add("..", false)
+	f.Add("../escape", true)
+	f.Add("/etc/passwd", false)
+	f.Add("", false)
+	f.Add(".", true)
+	f.Add("ok/../ok", false)
+	f.Add(`C:\Windows`, true)
+	f.Add("foo/bar", false)
+	f.Add(`foo\bar`, true)
+	f.Fuzz(func(t *testing.T, value string, proton bool) {
+		root := t.TempDir()
+		rel := filepath.FromSlash(strings.ReplaceAll(value, `\`, "/"))
+		if filepath.IsLocal(rel) && rel != "" {
+			p := filepath.Join(root, rel)
+			_ = os.MkdirAll(filepath.Dir(p), 0o700)
+			_ = os.WriteFile(p, []byte{0}, 0o600)
+		}
+		got, ok := profilePath(root, value, proton)
+		if !ok {
+			return
+		}
+		if rel == "" || !filepath.IsLocal(rel) {
+			t.Fatalf("accepted non-local %q -> %q", value, got)
+		}
+		abs, err := filepath.Abs(filepath.Join(root, rel))
+		if err != nil {
+			t.Fatal(err)
+		}
+		rootAbs, err := filepath.Abs(root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		outRel, err := filepath.Rel(rootAbs, abs)
+		if err != nil || !filepath.IsLocal(outRel) {
+			t.Fatalf("escaped %q -> %q", value, abs)
+		}
+		if proton {
+			if !strings.HasPrefix(got, `Z:`) || strings.Contains(got, "/") {
+				t.Fatalf("proton path %q", got)
+			}
+			return
+		}
+		if got != abs {
+			t.Fatalf("got %q, want %q", got, abs)
 		}
 	})
 }
