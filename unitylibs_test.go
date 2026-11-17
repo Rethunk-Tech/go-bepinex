@@ -174,3 +174,30 @@ func TestCheckUnityZipRefusesSizeOverflow(t *testing.T) {
 		t.Fatalf("got %v", err)
 	}
 }
+
+func TestCheckUnityZipBoundsUnpackedSize(t *testing.T) {
+	raw := func(sizes ...uint64) []byte {
+		t.Helper()
+		var buf bytes.Buffer
+		zw := zip.NewWriter(&buf)
+		for i, sz := range sizes {
+			if _, err := zw.CreateRaw(&zip.FileHeader{
+				Name:               string(rune('a'+i)) + ".dll",
+				Method:             zip.Store,
+				UncompressedSize64: sz,
+			}); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := zw.Close(); err != nil {
+			t.Fatal(err)
+		}
+		return buf.Bytes()
+	}
+	if err := checkUnityZip(raw(maxUnityLibsUnpacked)); err != nil {
+		t.Fatalf("size at cap: %v", err)
+	}
+	if err := checkUnityZip(raw(maxUnityLibsUnpacked-10, 20)); err == nil || err.Error() != "unpacks too large" {
+		t.Fatalf("sum past cap: %v", err)
+	}
+}

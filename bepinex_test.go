@@ -95,8 +95,23 @@ func TestInstallPackAndDoorstopFiles(t *testing.T) {
 	if got := strings.Join(DoorstopFiles(root, "winhttp.dll"), ","); got != "doorstop_config.ini,winhttp.dll" {
 		t.Fatalf("doorstop files %v", got)
 	}
-	if got, _ := InstallPack(buildPack(t, "garbage"), filepath.Join(t.TempDir(), "p")); got.Doorstop != 3 {
-		t.Fatalf("default doorstop %d", got.Doorstop)
+	for _, ver := range []string{"garbage", "0", "0.1"} {
+		if got, _ := InstallPack(buildPack(t, ver), filepath.Join(t.TempDir(), "p")); got.Doorstop != 3 {
+			t.Fatalf("default doorstop for %q: %d", ver, got.Doorstop)
+		}
+	}
+}
+
+func TestInstallPackKeepsAManifestAtTheSizeCap(t *testing.T) {
+	body := strings.Repeat("m", maxManifestBytes)
+	got, err := InstallPack(writeZip(t, map[string]string{
+		"manifest.json":                                  body,
+		"BepInExPack/winhttp.dll":                        "proxy",
+		"BepInExPack/BepInEx/core/BepInEx.Preloader.dll": "pre",
+		"BepInExPack/.doorstop_version":                  "4",
+	}), filepath.Join(t.TempDir(), "p"))
+	if err != nil || string(got.Manifest) != body {
+		t.Fatalf("manifest at cap: %d bytes, %v", len(got.Manifest), err)
 	}
 }
 
