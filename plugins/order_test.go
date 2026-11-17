@@ -111,6 +111,31 @@ func TestLoadOrderDropsBelowMinVersion(t *testing.T) {
 	assertSkipped(t, skipped, skipWant{"needver", "dep below MinVersion 2.0.0"})
 }
 
+func TestLoadOrderAcceptsHardDependencyAtMinVersion(t *testing.T) {
+	order, skipped := LoadOrder([]dotnet.Declared{
+		{
+			Plugins: []dotnet.Plugin{{GUID: "needver", Name: "needver", Version: "1.0.0"}},
+			Relations: []dotnet.Relation{{
+				Plugin: "needver", GUID: "dep", Kind: dotnet.HardDependency, MinVersion: "1.0.0",
+			}},
+		},
+		{Plugins: []dotnet.Plugin{{GUID: "dep", Name: "dep", Version: "1.0.0"}}},
+	})
+	assertOrder(t, order, "dep", "needver")
+	assertSkipped(t, skipped)
+}
+
+func TestLoadOrderKeepsTheFirstOfEqualVersions(t *testing.T) {
+	order, _ := LoadOrder([]dotnet.Declared{
+		{Plugins: []dotnet.Plugin{{GUID: "p", Name: "first", Version: "1.0.0"}}},
+		{Plugins: []dotnet.Plugin{{GUID: "p", Name: "second", Version: "1.0.0"}}},
+	})
+	assertOrder(t, order, "p")
+	if order[0].Name != "first" {
+		t.Fatalf("kept %q, want first", order[0].Name)
+	}
+}
+
 func TestLoadOrderDropsHardDependentsOfSkipped(t *testing.T) {
 	order, skipped := LoadOrder([]dotnet.Declared{
 		{
