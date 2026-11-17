@@ -2,6 +2,7 @@ package wineoverride
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 )
@@ -13,6 +14,10 @@ func FuzzEdit(f *testing.F) {
 	f.Add("WINE REGISTRY Version 2\r", "winhttp")
 	f.Add("[Software\\\\Wine\\\\DllOverrides]\n\"version\"=\"builtin\"\n", "version")
 	f.Add("", "winhttp")
+	if b, err := os.ReadFile("testdata/user.reg"); err == nil {
+		f.Add(string(b), "winhttp")
+		f.Add(string(b), "version")
+	}
 	f.Fuzz(func(t *testing.T, text, dll string) {
 		if !validName(dll) {
 			return
