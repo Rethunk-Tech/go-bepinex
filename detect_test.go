@@ -28,6 +28,23 @@ func TestDetect(t *testing.T) {
 	}
 }
 
+func TestFlavorHasAReadableName(t *testing.T) {
+	for _, c := range []struct {
+		f    Flavor
+		want string
+	}{
+		{FlavorNone, "none"},
+		{FlavorBepInEx5, "BepInEx 5"},
+		{FlavorBepInEx6Mono, "BepInEx 6 Mono"},
+		{FlavorBepInEx6IL2CPP, "BepInEx 6 IL2CPP"},
+		{Flavor(-1), "unknown"},
+	} {
+		if got := c.f.String(); got != c.want {
+			t.Errorf("%d named %q, want %q", c.f, got, c.want)
+		}
+	}
+}
+
 func TestIsIL2CPPGame(t *testing.T) {
 	for dir, want := range map[string]bool{
 		"game-il2cpp-win":   true,
