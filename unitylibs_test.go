@@ -175,6 +175,47 @@ func TestCheckUnityZipRefusesSizeOverflow(t *testing.T) {
 	}
 }
 
+// A *_Data folder without globalgamemanagers is skipped so a sibling folder can still supply the version.
+func TestUnityVersionSkipsADataFolderWithNoHeader(t *testing.T) {
+	game := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(game, "A_Data"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	writeAt(t, filepath.Join(game, "B_Data", "globalgamemanagers"), []byte("2022.3.21f1"))
+	if got := UnityVersion(game); got != "2022.3.21" {
+		t.Errorf("UnityVersion = %q, want 2022.3.21", got)
+	}
+}
+
+// A cache path that exists but cannot be read is reported, not treated as a miss to re-download.
+func TestPlaceUnityLibsReportsAnUnreadableCache(t *testing.T) {
+	cache := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(cache, "unity-libs", "2022.3.21.zip"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := placeUnityLibs(t.Context(), "http://127.0.0.1:1/", unityGame(t), t.TempDir(), cache); err == nil {
+		t.Fatal("an unreadable cache was treated as success")
+	}
+}
+
+// Libraries are not written into a profile whose BepInEx path cannot be created.
+func TestPlaceUnityLibsLeavesABlockedProfileUntouched(t *testing.T) {
+	cache := t.TempDir()
+	writeAt(t, filepath.Join(cache, "unity-libs", "2022.3.21.zip"), unityZip(t, "UnityEngine.dll"))
+	profile := t.TempDir()
+	writeAt(t, filepath.Join(profile, "BepInEx"), []byte("not a dir"))
+	if err := placeUnityLibs(t.Context(), "http://127.0.0.1:1/", unityGame(t), profile, cache); err == nil {
+		t.Fatal("wrote through a blocking BepInEx path")
+	}
+}
+
+// A base URL that cannot be turned into a request is reported before any network.
+func TestPlaceUnityLibsRejectsAnUnrequestableURL(t *testing.T) {
+	if err := placeUnityLibs(t.Context(), "http://[", unityGame(t), t.TempDir(), t.TempDir()); err == nil {
+		t.Fatal("an invalid library URL succeeded")
+	}
+}
+
 func TestCheckUnityZipBoundsUnpackedSize(t *testing.T) {
 	raw := func(sizes ...uint64) []byte {
 		t.Helper()
