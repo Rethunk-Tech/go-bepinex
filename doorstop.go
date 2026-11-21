@@ -49,12 +49,7 @@ func DoorstopFiles(profileRoot, fallback string) []string {
 // config that leaves the profile is left as written. The file's line endings are kept; proton gives paths in the Wine
 // Z: form.
 func WriteAbsoluteConfig(profileRoot, dst string, doorstopMajor int, proton bool) error {
-	f, err := safefs.Open(filepath.Join(profileRoot, doorstopConfig))
-	if err != nil {
-		return err
-	}
-	defer func() { _ = f.Close() }()
-	b, err := safefs.ReadCapped(f, maxConfigBytes)
+	b, err := safefs.ReadFileCapped(filepath.Join(profileRoot, doorstopConfig), maxConfigBytes)
 	if err != nil {
 		return err
 	}
