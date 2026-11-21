@@ -10,6 +10,10 @@ Notable changes to `go-bepinex`. The format follows
 
 - `plugins.LoadOrder` omits plugins the chainloader would skip (missing hard dependency, below MinVersion, or a present incompatibility) and returns them with the reason; a skip cascades to hard-dependents.
 
+### Fixed
+
+- `doorstop_config.ini` and the Wine `user.reg` are read with `safefs.ReadFileCapped`, so a FIFO at the path is refused instead of blocking.
+
 ## [0.2.2] - 2026-11-07
 
 ### Fixed
