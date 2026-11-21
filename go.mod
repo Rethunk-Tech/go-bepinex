@@ -79,7 +79,7 @@ require (
 	github.com/daixiang0/gci v0.14.0 // indirect
 	github.com/dave/dst v0.28.0 // indirect
 	github.com/denis-tingaikin/go-header v0.5.0 // indirect
-	github.com/dlclark/regexp2/v2 v2.13.1 // indirect
+	github.com/dlclark/regexp2/v2 v2.13.2 // indirect
 	github.com/ettle/strcase v0.2.0 // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
@@ -130,7 +130,7 @@ require (
 	github.com/karamaru-alpha/copyloopvar v1.2.2 // indirect
 	github.com/kisielk/errcheck v1.30.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.6 // indirect
-	github.com/klauspost/compress v1.20.4 // indirect
+	github.com/klauspost/compress v1.20.5 // indirect
 	github.com/kulti/thelper v0.7.1 // indirect
 	github.com/kunwardeep/paralleltest v1.0.16 // indirect
 	github.com/ldez/exptostd v0.4.5 // indirect
@@ -222,7 +222,7 @@ require (
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	go4.org v0.0.0-20261028031214-ed6929a230fe // indirect
-	golang.org/x/exp/typeparams v0.0.0-20261119141654-b15d094f3610 // indirect
+	golang.org/x/exp/typeparams v0.0.0-20261120182113-8801fbdfac81 // indirect
 	golang.org/x/mod v0.43.0 // indirect
 	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
