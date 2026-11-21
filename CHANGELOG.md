@@ -6,8 +6,11 @@ Notable changes to `go-bepinex`. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-21
+
 ### Changed
 
+- Breaking: `plugins.LoadOrder` now returns `([]Loaded, []Skipped)`.
 - `plugins.LoadOrder` omits plugins the chainloader would skip (missing hard dependency, below MinVersion, or a present incompatibility) and returns them with the reason; a skip cascades to hard-dependents.
 
 ### Fixed
@@ -55,7 +58,8 @@ Notable changes to `go-bepinex`. The format follows
 - `plugins.LoadOrder` and `Loadable` give the order BepInEx 5's chainloader loads plugins in.
 - `logline.Parse`, `SplitStamp` and `Format` read and write BepInEx `LogOutput.log` header lines, fuzzed.
 
-[Unreleased]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Rethunk-Tech/go-bepinex/compare/v0.1.0...v0.2.0
